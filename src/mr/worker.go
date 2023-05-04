@@ -54,46 +54,42 @@ func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
 
 	// Your worker implementation here.
-	wlogInit()
-	workerId := os.Getpid()
+	wlogInit()              // 初始化日志
+	workerId := os.Getpid() // 为日志服务
 	for {
 		args := RequstArgs{WorkerId: workerId}
 		reply := RequstReply{}
-		working := call("Coordinator.Work", &args, &reply)
-
-		if reply.AllFinish || !working {
+		working := call("Coordinator.Work", &args, &reply) // 通过RPC请求任务
+		if reply.AllFinish || !working {                   // 如果结束，或者coordinator关闭了，认为是任务完成了
 			wlog.Println("finished")
 			return
 		}
 		wlog.Println("task info", reply)
 		if reply.TaskType == "map" {
-			MapWork(reply, mapf)
+			MapWork(reply, mapf) // 做map任务
 			args2 := CommitArgs{WorkerId: workerId, TaskId: reply.TaskId, TaskType: "map"}
 			reply2 := CommitReply{}
-			working2 := call("Coordinator.Commit", &args2, &reply2)
-			if !working2 {
+			working2 := call("Coordinator.Commit", &args2, &reply2) // 提交map任务
+			if !working2 {                                          // coordinator关闭了，认为是任务完成了
 				return
 			}
 			wlog.Println("Coordinator task", reply.TaskId, "has committed")
 		} else if reply.TaskType == "reduce" {
-			ReduceWork(reply, reducef)
+			ReduceWork(reply, reducef) // 做reduce任务
 			args2 := CommitArgs{WorkerId: workerId, TaskId: reply.TaskId, TaskType: "reduce"}
 			reply2 := CommitReply{}
-			working2 := call("Coordinator.Commit", &args2, &reply2)
-			if !working2 {
+			working2 := call("Coordinator.Commit", &args2, &reply2) // 提交reduce任务
+			if !working2 {                                          // coordinator关闭了，认为是任务完成了
 				return
 			}
 			wlog.Println("reduce task", reply.TaskId, "has committed")
 		} else {
-			time.Sleep(time.Second)
+			time.Sleep(time.Second) // 没有任务时候就稍等一会
 		}
 	}
-	// uncomment to send the Example RPC to the coordinator.
-	// CallExample()
-
 }
 func MapWork(reply RequstReply, mapf func(string, string) []KeyValue) {
-	file, err := os.Open(reply.File)
+	file, err := os.Open(reply.File) // 打开文件
 	if err != nil {
 		wlog.Fatalln("can't open", reply.File)
 	}
@@ -102,13 +98,13 @@ func MapWork(reply RequstReply, mapf func(string, string) []KeyValue) {
 		wlog.Fatalln("can't read", reply.File)
 	}
 	defer file.Close()
-	kva := mapf(reply.File, string(content))
-
-	intermediate := make([][]KeyValue, reply.NReduce)
+	kva := mapf(reply.File, string(content))          // 调用mapf函数
+	intermediate := make([][]KeyValue, reply.NReduce) // 通过ihash来对kva的数据进行分组
 	for i := range kva {
 		index := ihash(kva[i].Key) % reply.NReduce
 		intermediate[index] = append(intermediate[index], kva[i])
 	}
+	// 分成NReduce个临时文件，然后由Reduce任务去读取
 	for i := 0; i < reply.NReduce; i++ {
 		ifilename := fmt.Sprintf("mr-tmp-%d-%d", reply.TaskId, i)
 		// 创建临时文件
@@ -133,7 +129,7 @@ func MapWork(reply RequstReply, mapf func(string, string) []KeyValue) {
 
 func ReduceWork(reply RequstReply, reducef func(string, []string) string) {
 	intermediate := []KeyValue{}
-
+	// 读取之前由map任务分成各自TaskId的所有map任务的中间文件
 	for mapTaskNumber := 0; mapTaskNumber < reply.NMap; mapTaskNumber++ {
 		filename := fmt.Sprintf("mr-tmp-%d-%d", mapTaskNumber, reply.TaskId)
 		file, err := os.Open(filename)
@@ -150,11 +146,12 @@ func ReduceWork(reply RequstReply, reducef func(string, []string) string) {
 			intermediate = append(intermediate, kv)
 		}
 	}
+	//排序
 	sort.Sort(ByKey(intermediate))
-
+	// 生成结果文件，也是通过临时文件然后重命名的方式
 	i := 0
 	oFileName := "mr-out-" + strconv.Itoa(reply.TaskId+1)
-	ofile, err := os.CreateTemp(".", oFileName)
+	ofile, err := ioutil.TempFile(".", oFileName)
 	if err != nil {
 		wlog.Fatalln(err)
 	}
