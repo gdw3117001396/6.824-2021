@@ -30,6 +30,7 @@ type Coordinator struct {
 	mapFinish   bool
 	allFinish   bool
 	mutex       sync.Mutex
+	cond        *sync.Cond
 }
 
 const taskIdle = 0
@@ -83,6 +84,8 @@ func (c *Coordinator) Work(args *RequstArgs, reply *RequstReply) error {
 		return nil
 	}
 	if !c.mapFinish {
+		// 减少RPC发送次数
+		c.cond.Wait()
 		reply.AllFinish = false
 		return nil
 	}
@@ -122,6 +125,7 @@ func (c *Coordinator) Commit(args *CommitArgs, reply *CommitReply) error {
 	} else if args.TaskType == "reduce" {
 		c.reduceTasks[args.TaskId] = taskDown
 	}
+	c.cond.Broadcast()
 	for _, state := range c.reduceTasks {
 		if state != taskDown {
 			return nil
@@ -189,7 +193,17 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 	c.mapCount = 0
 	c.mapFinish = false
 	c.allFinish = false
+	c.cond = sync.NewCond(&c.mutex)
 	mlogInit()
+	// 每隔一段时间去唤醒一下等待的任务
+	go func() {
+		for {
+			c.mutex.Lock()
+			c.cond.Broadcast()
+			c.mutex.Unlock()
+			time.Sleep(time.Second)
+		}
+	}()
 	c.server()
 	return &c
 }

@@ -111,6 +111,7 @@ func MapWork(reply RequstReply, mapf func(string, string) []KeyValue) {
 	}
 	for i := 0; i < reply.NReduce; i++ {
 		ifilename := fmt.Sprintf("mr-tmp-%d-%d", reply.TaskId, i)
+		// 创建临时文件
 		ifile, err := ioutil.TempFile(".", ifilename)
 		if err != nil {
 			wlog.Fatalln(err)
@@ -123,6 +124,7 @@ func MapWork(reply RequstReply, mapf func(string, string) []KeyValue) {
 			}
 		}
 		ifile.Close()
+		// 重命名，覆盖文件
 		if err := os.Rename(ifile.Name(), ifilename); err != nil {
 			wlog.Fatalln("cannot rename", ifilename)
 		}
