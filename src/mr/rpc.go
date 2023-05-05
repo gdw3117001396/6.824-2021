@@ -23,9 +23,13 @@ type ExampleArgs struct {
 type ExampleReply struct {
 	Y int
 }
+
+// 请求任务
 type RequstArgs struct {
 	WorkerId int
 }
+
+// 请求任务回复
 type RequstReply struct {
 	File      string
 	TaskId    int
@@ -34,11 +38,15 @@ type RequstReply struct {
 	NMap      int
 	NReduce   int
 }
+
+// 提交任务
 type CommitArgs struct {
 	WorkerId int
 	TaskId   int
 	TaskType string
 }
+
+// 回复任务
 type CommitReply struct {
 }
 
