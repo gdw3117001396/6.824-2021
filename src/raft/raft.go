@@ -19,11 +19,10 @@ package raft
 
 import (
 	//	"bytes"
-	"log"
-	"os"
-	"strconv"
+
 	"sync"
 	"sync/atomic"
+	"time"
 
 	//	"6.824/labgob"
 	"6.824/labrpc"
@@ -53,21 +52,14 @@ type ApplyMsg struct {
 }
 
 const null int = -1
+
+type RaftState string
+
 const (
-	Candidate = iota
-	Follower
-	Leader
+	Follower  RaftState = "Follower"
+	Candidate           = "Candidate"
+	Leader              = "Leader"
 )
-
-var rflog *log.Logger
-var rflogFile *os.File
-
-func rflogInit() {
-	rfserver := os.Getpid()
-	logName := "rfserver" + strconv.Itoa(rfserver) + ".log"
-	rflogFile, _ = os.Create(logName)
-	rflog = log.New(rflogFile, "", log.Lmicroseconds|log.Lshortfile)
-}
 
 //
 // A Go object implementing a single Raft peer.
@@ -82,12 +74,14 @@ type Raft struct {
 	// Your data here (2A, 2B, 2C).
 	// Look at the paper's Figure 2 for a description of what
 	// state a Raft server must maintain.
+	state        RaftState
+	heartBeat    time.Duration
+	electionTime time.Timer
 	// 2A:只考虑选举情况
-	currentTerm int // 此节点的任期
 	// 在当前任期内，此节点将选票投给了谁。
 	//一个任期内，节点只能将选票投给某一个节点。因此当节点任期更新时要将 votedfor 置为 null。
-	votedFor int
-	state    int
+	currentTerm int // 此节点的任期
+	votedFor    int
 }
 
 type Log struct {
@@ -198,13 +192,10 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	if args.Term < rf.currentTerm {
 		reply.Term = rf.currentTerm
 		reply.VoteGranted = false
-		rflog.Printf("%d rfserver has refused vote to %d in %d", rf.me, args.CandidateId, args.Term)
 	} else {
-		// 这里之后2C要考虑重复投票的问题
 		if rf.votedFor == null || rf.votedFor == args.CandidateId {
 			rf.votedFor = args.CandidateId
 			reply.VoteGranted = true
-			rflog.Printf("%d rfserver has granted vote to %d in %d", rf.me, args.CandidateId, args.Term)
 		}
 	}
 }
@@ -228,9 +219,12 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		reply.Term = rf.currentTerm
 	} else if args.Term > rf.currentTerm {
 		// 如果对方任期大于自己的话，转为follower并且重置votedfor
-		reply.Success = true
 		rf.state = Follower
 		rf.votedFor = -1
+		rf.currentTerm = args.Term
+		reply.Success = true
+		reply.Term = rf.currentTerm
+		// 收到来自当前leader的心跳，重置选举超时器
 	}
 }
 
@@ -327,7 +321,7 @@ func (rf *Raft) ticker() {
 		// be started and to randomize sleeping time using
 		// time.Sleep().
 		// TODO:2A
-
+		time.Sleep(rf.h)
 	}
 }
 
