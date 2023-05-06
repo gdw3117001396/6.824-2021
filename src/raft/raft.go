@@ -52,7 +52,7 @@ type ApplyMsg struct {
 	SnapshotIndex int
 }
 
-const null int = 0
+const null int = -1
 
 var rflog *log.Logger
 var rflogFile *os.File
@@ -165,8 +165,8 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 type RequestVoteArgs struct {
 	// Your data here (2A, 2B).
 	// 2A:只考虑选举情况
-	term        int // Candidate的任期
-	candidateId int // candidate请求投票
+	Term        int // Candidate的任期
+	CandidateId int // candidate请求投票
 }
 
 //
@@ -176,8 +176,8 @@ type RequestVoteArgs struct {
 type RequestVoteReply struct {
 	// Your data here (2A).
 	// 2A:只考虑选举情况
-	term        int  // 此节点的任期。假如 Candidate 发现 Follower 的任期高于自己，则会放弃 Candidate 身份并更新自己的任期。
-	voteGranted bool // 是否同意candidated当选，true表示同意
+	Term        int  // 此节点的任期。假如 Candidate 发现 Follower 的任期高于自己，则会放弃 Candidate 身份并更新自己的任期。
+	VoteGranted bool // 是否同意candidated当选，true表示同意
 }
 
 //
@@ -189,39 +189,39 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	// 如果term < currentTerm,拒绝投票，否则如果rf.votedFor == null or candidateId同意
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	if args.term < rf.currentTerm {
-		reply.term = rf.currentTerm
-		reply.voteGranted = false
-		rflog.Printf("%d rfserver has refused vote to %d in %d", rf.me, args.candidateId, args.term)
+	if args.Term < rf.currentTerm {
+		reply.Term = rf.currentTerm
+		reply.VoteGranted = false
+		rflog.Printf("%d rfserver has refused vote to %d in %d", rf.me, args.CandidateId, args.Term)
 	} else {
 		// 这里之后2C要考虑重复投票的问题
-		if rf.votedFor == null || rf.votedFor == args.candidateId {
-			rf.votedFor = args.candidateId
-			reply.voteGranted = true
-			rflog.Printf("%d rfserver has granted vote to %d in %d", rf.me, args.candidateId, args.term)
+		if rf.votedFor == null || rf.votedFor == args.CandidateId {
+			rf.votedFor = args.CandidateId
+			reply.VoteGranted = true
+			rflog.Printf("%d rfserver has granted vote to %d in %d", rf.me, args.CandidateId, args.Term)
 		}
 	}
 }
 
 // 在领导选举的过程中，AppendEntries RPC 用来实现 Leader 的心跳机制。节点的 AppendEntries RPC 会被 Leader 定期调用。
 type AppendEntriesArgs struct {
-	term     int // Leader 的任期
-	leaderId int // Client 可能将请求发送至 Follower 节点，得知 leaderId 后 Follower 可将 Client 的请求重定位至 Leader 节点
+	Term     int // Leader 的任期
+	LeaderId int // Client 可能将请求发送至 Follower 节点，得知 leaderId 后 Follower 可将 Client 的请求重定位至 Leader 节点
 }
 
 type AppendEntriesReply struct {
-	term    int  //此节点的任期,假如 Leader 发现 Follower 的任期高于自己，则会放弃 Leader 身份并更新自己的任期。
-	success bool // 此节点是否认同 Leader 发送的心跳。
+	Term    int  //此节点的任期,假如 Leader 发现 Follower 的任期高于自己，则会放弃 Leader 身份并更新自己的任期。
+	Success bool // 此节点是否认同 Leader 发送的心跳。
 }
 
 func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	if args.term < rf.currentTerm {
-		reply.success = false
-		reply.term = rf.currentTerm
-	} else {
-		reply.success = true
+	if args.Term < rf.currentTerm {
+		reply.Success = false
+		reply.Term = rf.currentTerm
+	} else if args.Term > rf.currentTerm {
+		reply.Success = true
 	}
 }
 
