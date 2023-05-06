@@ -321,7 +321,7 @@ func (rf *Raft) ticker() {
 		// be started and to randomize sleeping time using
 		// time.Sleep().
 		// TODO:2A
-		time.Sleep(rf.h)
+
 	}
 }
 
@@ -344,7 +344,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 
 	// Your initialization code here (2A, 2B, 2C).
-	rflogInit()
+
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
