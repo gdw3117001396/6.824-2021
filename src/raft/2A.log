@@ -1,0 +1,709 @@
+Test (2A): initial election ...
+2023/05/06 19:39:26 1 在 term 1 成为了Candidate然后发起了投票
+2023/05/06 19:39:26 2 在 term 1 成为了Candidate然后发起了投票
+2023/05/06 19:39:26 0 在 term 1 成为了Candidate然后发起了投票
+2023/05/06 19:39:26 1 在 term: 1 收到了来自 2 的RequestVote request , args: &{Term:1 CandidateId:2}
+2023/05/06 19:39:26 0 在 term: 1 收到了来自 1 的RequestVote request , args: &{Term:1 CandidateId:1}
+2023/05/06 19:39:26 2 在 term: 1 收到了来自 1 的RequestVote request , args: &{Term:1 CandidateId:1}
+2023/05/06 19:39:26 0 在 term: 1 收到了来自 2 的RequestVote request , args: &{Term:1 CandidateId:2}
+2023/05/06 19:39:26 1 在 term: 1 收到了来自 0 的RequestVote request , args: &{Term:1 CandidateId:0}
+2023/05/06 19:39:26 2 在 term: 1 收到了来自 0 的RequestVote request , args: &{Term:1 CandidateId:0}
+2023/05/06 19:39:26 1 在 term 2 成为了Candidate然后发起了投票
+2023/05/06 19:39:26 2 在 term: 1 收到了来自 1 的RequestVote request , args: &{Term:2 CandidateId:1}
+2023/05/06 19:39:26 2 在 term 2 给 1 投票
+2023/05/06 19:39:26 1 在 term 2 收到了 2 的投票，现在票数 2
+2023/05/06 19:39:26 1 在 term 2 成为Leader
+2023/05/06 19:39:26 0 在 term: 1 收到了来自 1 的RequestVote request , args: &{Term:2 CandidateId:1}
+2023/05/06 19:39:26 0 在 term 2 给 1 投票
+2023/05/06 19:39:26 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:26 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:26 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:27 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:27 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:27 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:27 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:27 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:27 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:27 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:27 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:27 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:27 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:27 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:28 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:28 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:28 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:28 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:28 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:28 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:28 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:28 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:28 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:28 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:28 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:29 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:29 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:29 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:29 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:29 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:29 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:29 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:29 2 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+2023/05/06 19:39:29 0 在 term 2 收到 1 的 AppendEntries request &{Term:2 LeaderId:1}
+  ... Passed --   3.6  3   66    8180    0
+Test (2A): election after network failure ...
+2023/05/06 19:39:30 2 在 term 1 成为了Candidate然后发起了投票
+2023/05/06 19:39:30 1 在 term: 0 收到了来自 2 的RequestVote request , args: &{Term:1 CandidateId:2}
+2023/05/06 19:39:30 1 在 term 1 给 2 投票
+2023/05/06 19:39:30 2 在 term 1 收到了 1 的投票，现在票数 2
+2023/05/06 19:39:30 2 在 term 1 成为Leader
+2023/05/06 19:39:30 0 在 term: 0 收到了来自 2 的RequestVote request , args: &{Term:1 CandidateId:2}
+2023/05/06 19:39:30 0 在 term 1 给 2 投票
+2023/05/06 19:39:30 2 在 term 1 触发心跳, state: 2, 
+2023/05/06 19:39:30 0 在 term 1 收到 2 的 AppendEntries request &{Term:1 LeaderId:2}
+2023/05/06 19:39:30 1 在 term 2 成为了Candidate然后发起了投票
+2023/05/06 19:39:30 1 在 term 2 收到 2 的 AppendEntries request &{Term:1 LeaderId:2}
+2023/05/06 19:39:30 2 在 term 2 成为follower
+2023/05/06 19:39:30 0 在 term: 1 收到了来自 1 的RequestVote request , args: &{Term:2 CandidateId:1}
+2023/05/06 19:39:30 0 在 term 2 给 1 投票
+2023/05/06 19:39:30 1 在 term 2 收到了 0 的投票，现在票数 2
+2023/05/06 19:39:30 1 在 term 2 成为Leader
+2023/05/06 19:39:30 2 在 term: 2 收到了来自 1 的RequestVote request , args: &{Term:2 CandidateId:1}
+2023/05/06 19:39:30 2 在 term 2 给 1 投票
+2023/05/06 19:39:30 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:30 2 在 term 3 成为了Candidate然后发起了投票
+2023/05/06 19:39:30 0 在 term: 2 收到了来自 2 的RequestVote request , args: &{Term:3 CandidateId:2}
+2023/05/06 19:39:30 0 在 term 3 给 2 投票
+2023/05/06 19:39:30 2 在 term 3 收到了 0 的投票，现在票数 2
+2023/05/06 19:39:30 2 在 term 3 成为Leader
+2023/05/06 19:39:30 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:30 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:30 0 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:30 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:30 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:30 0 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:30 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:30 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:30 0 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:30 1 在 term 2 触发心跳, state: 2, 
+2023/05/06 19:39:30 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:30 1 在 term 2 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:30 1 在 term 2 成为follower
+2023/05/06 19:39:30 0 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:30 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:30 0 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:30 1 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:30 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:30 0 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:30 1 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:31 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:31 1 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:31 0 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:31 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:31 0 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:31 1 在 term 3 收到 2 的 AppendEntries request &{Term:3 LeaderId:2}
+2023/05/06 19:39:31 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:31 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:31 1 在 term 4 成为了Candidate然后发起了投票
+2023/05/06 19:39:31 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:31 0 在 term 4 成为了Candidate然后发起了投票
+2023/05/06 19:39:31 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:31 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:31 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:31 1 在 term 5 成为了Candidate然后发起了投票
+2023/05/06 19:39:31 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:31 0 在 term 5 成为了Candidate然后发起了投票
+2023/05/06 19:39:31 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:32 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:32 1 在 term 6 成为了Candidate然后发起了投票
+2023/05/06 19:39:32 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:32 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:32 0 在 term 6 成为了Candidate然后发起了投票
+2023/05/06 19:39:32 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:32 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:32 1 在 term 7 成为了Candidate然后发起了投票
+2023/05/06 19:39:32 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:32 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:32 0 在 term 7 成为了Candidate然后发起了投票
+2023/05/06 19:39:32 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:32 1 在 term 8 成为了Candidate然后发起了投票
+2023/05/06 19:39:32 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:32 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:33 0 在 term 8 成为了Candidate然后发起了投票
+2023/05/06 19:39:33 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:33 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:33 1 在 term 9 成为了Candidate然后发起了投票
+2023/05/06 19:39:33 0 在 term: 8 收到了来自 1 的RequestVote request , args: &{Term:9 CandidateId:1}
+2023/05/06 19:39:33 0 在 term 9 给 1 投票
+2023/05/06 19:39:33 1 在 term 9 收到了 0 的投票，现在票数 2
+2023/05/06 19:39:33 1 在 term 9 成为Leader
+2023/05/06 19:39:33 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:33 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:33 1 在 term 9 触发心跳, state: 2, 
+2023/05/06 19:39:33 0 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:33 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:33 1 在 term 9 触发心跳, state: 2, 
+2023/05/06 19:39:33 0 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:33 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:33 1 在 term 9 触发心跳, state: 2, 
+2023/05/06 19:39:33 0 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:33 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:33 1 在 term 9 触发心跳, state: 2, 
+2023/05/06 19:39:33 0 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:33 1 在 term 9 触发心跳, state: 2, 
+2023/05/06 19:39:33 2 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:33 2 在 term 3 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:33 2 在 term 3 成为follower
+2023/05/06 19:39:33 0 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:33 1 在 term 9 触发心跳, state: 2, 
+2023/05/06 19:39:33 0 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:33 2 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:34 1 在 term 9 触发心跳, state: 2, 
+2023/05/06 19:39:34 2 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:34 0 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:34 1 在 term 9 触发心跳, state: 2, 
+2023/05/06 19:39:34 2 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+2023/05/06 19:39:34 0 在 term 9 收到 1 的 AppendEntries request &{Term:9 LeaderId:1}
+  ... Passed --   4.5  3  122    9628    0
+Test (2A): multiple elections ...
+2023/05/06 19:39:34 0 在 term 1 成为了Candidate然后发起了投票
+2023/05/06 19:39:34 4 在 term: 0 收到了来自 0 的RequestVote request , args: &{Term:1 CandidateId:0}
+2023/05/06 19:39:34 4 在 term 1 给 0 投票
+2023/05/06 19:39:34 3 在 term 1 成为了Candidate然后发起了投票
+2023/05/06 19:39:34 0 在 term 1 收到了 4 的投票，现在票数 2
+2023/05/06 19:39:34 6 在 term: 0 收到了来自 0 的RequestVote request , args: &{Term:1 CandidateId:0}
+2023/05/06 19:39:34 6 在 term 1 给 0 投票
+2023/05/06 19:39:34 0 在 term 1 收到了 6 的投票，现在票数 3
+2023/05/06 19:39:34 5 在 term 1 成为了Candidate然后发起了投票
+2023/05/06 19:39:34 3 在 term: 1 收到了来自 0 的RequestVote request , args: &{Term:1 CandidateId:0}
+2023/05/06 19:39:34 2 在 term: 0 收到了来自 3 的RequestVote request , args: &{Term:1 CandidateId:3}
+2023/05/06 19:39:34 2 在 term 1 给 3 投票
+2023/05/06 19:39:34 5 在 term: 1 收到了来自 0 的RequestVote request , args: &{Term:1 CandidateId:0}
+2023/05/06 19:39:34 2 在 term: 1 收到了来自 0 的RequestVote request , args: &{Term:1 CandidateId:0}
+2023/05/06 19:39:34 5 在 term: 1 收到了来自 3 的RequestVote request , args: &{Term:1 CandidateId:3}
+2023/05/06 19:39:34 4 在 term: 1 收到了来自 5 的RequestVote request , args: &{Term:1 CandidateId:5}
+2023/05/06 19:39:34 2 在 term: 1 收到了来自 5 的RequestVote request , args: &{Term:1 CandidateId:5}
+2023/05/06 19:39:34 1 在 term: 0 收到了来自 5 的RequestVote request , args: &{Term:1 CandidateId:5}
+2023/05/06 19:39:34 1 在 term 1 给 5 投票
+2023/05/06 19:39:34 5 在 term 1 收到了 1 的投票，现在票数 2
+2023/05/06 19:39:34 6 在 term: 1 收到了来自 5 的RequestVote request , args: &{Term:1 CandidateId:5}
+2023/05/06 19:39:34 3 在 term 1 收到了 2 的投票，现在票数 2
+2023/05/06 19:39:34 1 在 term: 1 收到了来自 0 的RequestVote request , args: &{Term:1 CandidateId:0}
+2023/05/06 19:39:34 6 在 term: 1 收到了来自 3 的RequestVote request , args: &{Term:1 CandidateId:3}
+2023/05/06 19:39:34 1 在 term: 1 收到了来自 3 的RequestVote request , args: &{Term:1 CandidateId:3}
+2023/05/06 19:39:34 0 在 term: 1 收到了来自 5 的RequestVote request , args: &{Term:1 CandidateId:5}
+2023/05/06 19:39:34 0 在 term: 1 收到了来自 3 的RequestVote request , args: &{Term:1 CandidateId:3}
+2023/05/06 19:39:34 4 在 term: 1 收到了来自 3 的RequestVote request , args: &{Term:1 CandidateId:3}
+2023/05/06 19:39:34 3 在 term: 1 收到了来自 5 的RequestVote request , args: &{Term:1 CandidateId:5}
+2023/05/06 19:39:34 1 在 term 2 成为了Candidate然后发起了投票
+2023/05/06 19:39:34 2 在 term 2 成为了Candidate然后发起了投票
+2023/05/06 19:39:34 3 在 term: 1 收到了来自 1 的RequestVote request , args: &{Term:2 CandidateId:1}
+2023/05/06 19:39:34 3 在 term 2 给 1 投票
+2023/05/06 19:39:34 1 在 term 2 收到了 3 的投票，现在票数 2
+2023/05/06 19:39:34 4 在 term: 1 收到了来自 1 的RequestVote request , args: &{Term:2 CandidateId:1}
+2023/05/06 19:39:34 4 在 term 2 给 1 投票
+2023/05/06 19:39:34 5 在 term: 1 收到了来自 1 的RequestVote request , args: &{Term:2 CandidateId:1}
+2023/05/06 19:39:34 5 在 term 2 给 1 投票
+2023/05/06 19:39:34 1 在 term 2 收到了 5 的投票，现在票数 3
+2023/05/06 19:39:34 2 在 term: 2 收到了来自 1 的RequestVote request , args: &{Term:2 CandidateId:1}
+2023/05/06 19:39:34 1 在 term 2 收到了 4 的投票，现在票数 4
+2023/05/06 19:39:34 1 在 term 2 成为Leader
+2023/05/06 19:39:34 6 在 term 2 成为了Candidate然后发起了投票
+2023/05/06 19:39:34 4 在 term 3 成为了Candidate然后发起了投票
+2023/05/06 19:39:34 0 在 term: 1 收到了来自 1 的RequestVote request , args: &{Term:2 CandidateId:1}
+2023/05/06 19:39:34 0 在 term 2 给 1 投票
+2023/05/06 19:39:34 1 在 term: 2 收到了来自 6 的RequestVote request , args: &{Term:2 CandidateId:6}
+2023/05/06 19:39:34 3 在 term: 2 收到了来自 6 的RequestVote request , args: &{Term:2 CandidateId:6}
+2023/05/06 19:39:34 4 在 term: 3 收到了来自 6 的RequestVote request , args: &{Term:2 CandidateId:6}
+2023/05/06 19:39:34 1 在 term: 2 收到了来自 2 的RequestVote request , args: &{Term:2 CandidateId:2}
+2023/05/06 19:39:34 2 在 term: 2 收到了来自 4 的RequestVote request , args: &{Term:3 CandidateId:4}
+2023/05/06 19:39:34 2 在 term 3 给 4 投票
+2023/05/06 19:39:34 3 在 term: 2 收到了来自 2 的RequestVote request , args: &{Term:2 CandidateId:2}
+2023/05/06 19:39:34 0 在 term: 2 收到了来自 4 的RequestVote request , args: &{Term:3 CandidateId:4}
+2023/05/06 19:39:34 6 在 term: 2 收到了来自 1 的RequestVote request , args: &{Term:2 CandidateId:1}
+2023/05/06 19:39:34 5 在 term: 2 收到了来自 6 的RequestVote request , args: &{Term:2 CandidateId:6}
+2023/05/06 19:39:34 1 在 term: 2 收到了来自 4 的RequestVote request , args: &{Term:3 CandidateId:4}
+2023/05/06 19:39:34 4 在 term 3 收到了 2 的投票，现在票数 2
+2023/05/06 19:39:34 2 在 term: 3 收到了来自 6 的RequestVote request , args: &{Term:2 CandidateId:6}
+2023/05/06 19:39:34 3 在 term: 2 收到了来自 4 的RequestVote request , args: &{Term:3 CandidateId:4}
+2023/05/06 19:39:34 0 在 term 3 给 4 投票
+2023/05/06 19:39:34 6 在 term 3 成为follower
+2023/05/06 19:39:34 6 在 term: 3 收到了来自 4 的RequestVote request , args: &{Term:3 CandidateId:4}
+2023/05/06 19:39:34 6 在 term 3 给 4 投票
+2023/05/06 19:39:34 5 在 term: 2 收到了来自 4 的RequestVote request , args: &{Term:3 CandidateId:4}
+2023/05/06 19:39:34 5 在 term 3 给 4 投票
+2023/05/06 19:39:34 4 在 term 3 收到了 6 的投票，现在票数 3
+2023/05/06 19:39:34 3 在 term 3 给 4 投票
+2023/05/06 19:39:34 4 在 term 3 收到了 0 的投票，现在票数 4
+2023/05/06 19:39:34 4 在 term 3 成为Leader
+2023/05/06 19:39:34 6 在 term: 3 收到了来自 2 的RequestVote request , args: &{Term:2 CandidateId:2}
+2023/05/06 19:39:34 1 在 term 3 给 4 投票
+2023/05/06 19:39:34 0 在 term: 3 收到了来自 2 的RequestVote request , args: &{Term:2 CandidateId:2}
+2023/05/06 19:39:34 0 在 term: 3 收到了来自 6 的RequestVote request , args: &{Term:2 CandidateId:6}
+2023/05/06 19:39:34 4 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:34 6 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 0 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 3 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 2 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 4 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:34 2 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 3 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 6 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 0 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 1 在 term 4 成为了Candidate然后发起了投票
+2023/05/06 19:39:34 4 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:34 6 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 2 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 3 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 0 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:34 5 在 term 4 成为了Candidate然后发起了投票
+2023/05/06 19:39:35 4 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:35 0 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 2 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 6 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 3 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 4 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:35 0 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 2 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 3 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 6 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 4 在 term 3 触发心跳, state: 2, 
+2023/05/06 19:39:35 6 在 term 3 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 5 在 term 4 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 4 在 term 4 成为follower
+2023/05/06 19:39:35 1 在 term 4 收到 4 的 AppendEntries request &{Term:3 LeaderId:4}
+2023/05/06 19:39:35 5 在 term 5 成为了Candidate然后发起了投票
+2023/05/06 19:39:35 1 在 term: 4 收到了来自 5 的RequestVote request , args: &{Term:5 CandidateId:5}
+2023/05/06 19:39:35 1 在 term 5 给 5 投票
+2023/05/06 19:39:35 5 在 term 5 收到了 1 的投票，现在票数 2
+2023/05/06 19:39:35 6 在 term: 3 收到了来自 5 的RequestVote request , args: &{Term:5 CandidateId:5}
+2023/05/06 19:39:35 6 在 term 5 给 5 投票
+2023/05/06 19:39:35 4 在 term: 4 收到了来自 5 的RequestVote request , args: &{Term:5 CandidateId:5}
+2023/05/06 19:39:35 4 在 term 5 给 5 投票
+2023/05/06 19:39:35 5 在 term 5 收到了 6 的投票，现在票数 3
+2023/05/06 19:39:35 5 在 term 5 收到了 4 的投票，现在票数 4
+2023/05/06 19:39:35 5 在 term 5 成为Leader
+2023/05/06 19:39:35 1 在 term 6 成为了Candidate然后发起了投票
+2023/05/06 19:39:35 4 在 term: 5 收到了来自 1 的RequestVote request , args: &{Term:6 CandidateId:1}
+2023/05/06 19:39:35 4 在 term 6 给 1 投票
+2023/05/06 19:39:35 1 在 term 6 收到了 4 的投票，现在票数 2
+2023/05/06 19:39:35 6 在 term: 5 收到了来自 1 的RequestVote request , args: &{Term:6 CandidateId:1}
+2023/05/06 19:39:35 6 在 term 6 给 1 投票
+2023/05/06 19:39:35 1 在 term 6 收到了 6 的投票，现在票数 3
+2023/05/06 19:39:35 5 在 term: 5 收到了来自 1 的RequestVote request , args: &{Term:6 CandidateId:1}
+2023/05/06 19:39:35 5 在 term 6 给 1 投票
+2023/05/06 19:39:35 1 在 term 6 收到了 5 的投票，现在票数 4
+2023/05/06 19:39:35 1 在 term 6 成为Leader
+2023/05/06 19:39:35 4 在 term 7 成为了Candidate然后发起了投票
+2023/05/06 19:39:35 1 在 term: 6 收到了来自 4 的RequestVote request , args: &{Term:7 CandidateId:4}
+2023/05/06 19:39:35 1 在 term 7 给 4 投票
+2023/05/06 19:39:35 5 在 term: 6 收到了来自 4 的RequestVote request , args: &{Term:7 CandidateId:4}
+2023/05/06 19:39:35 5 在 term 7 给 4 投票
+2023/05/06 19:39:35 4 在 term 7 收到了 1 的投票，现在票数 2
+2023/05/06 19:39:35 6 在 term: 6 收到了来自 4 的RequestVote request , args: &{Term:7 CandidateId:4}
+2023/05/06 19:39:35 6 在 term 7 给 4 投票
+2023/05/06 19:39:35 4 在 term 7 收到了 5 的投票，现在票数 3
+2023/05/06 19:39:35 4 在 term 7 收到了 6 的投票，现在票数 4
+2023/05/06 19:39:35 4 在 term 7 成为Leader
+2023/05/06 19:39:35 3 在 term 4 成为了Candidate然后发起了投票
+2023/05/06 19:39:35 4 在 term 7 触发心跳, state: 2, 
+2023/05/06 19:39:35 1 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 6 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 5 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 0 在 term 4 成为了Candidate然后发起了投票
+2023/05/06 19:39:35 4 在 term 7 触发心跳, state: 2, 
+2023/05/06 19:39:35 1 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 5 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 6 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 2 在 term 4 成为了Candidate然后发起了投票
+2023/05/06 19:39:35 4 在 term 7 触发心跳, state: 2, 
+2023/05/06 19:39:35 6 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 5 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 1 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 3 在 term 5 成为了Candidate然后发起了投票
+2023/05/06 19:39:35 4 在 term 7 触发心跳, state: 2, 
+2023/05/06 19:39:35 5 在 term: 7 收到了来自 3 的RequestVote request , args: &{Term:5 CandidateId:3}
+2023/05/06 19:39:35 3 在 term 7 成为follower
+2023/05/06 19:39:35 2 在 term: 4 收到了来自 3 的RequestVote request , args: &{Term:5 CandidateId:3}
+2023/05/06 19:39:35 2 在 term 5 给 3 投票
+2023/05/06 19:39:35 1 在 term: 7 收到了来自 3 的RequestVote request , args: &{Term:5 CandidateId:3}
+2023/05/06 19:39:35 4 在 term: 7 收到了来自 3 的RequestVote request , args: &{Term:5 CandidateId:3}
+2023/05/06 19:39:35 5 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 3 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 1 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 2 在 term 5 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 2 在 term 5 成为follower
+2023/05/06 19:39:35 4 在 term 7 触发心跳, state: 2, 
+2023/05/06 19:39:35 3 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 1 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 5 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 2 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 0 在 term 5 成为了Candidate然后发起了投票
+2023/05/06 19:39:35 4 在 term 7 触发心跳, state: 2, 
+2023/05/06 19:39:35 3 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 5 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 2 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:35 1 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:36 6 在 term 8 成为了Candidate然后发起了投票
+2023/05/06 19:39:36 4 在 term 7 触发心跳, state: 2, 
+2023/05/06 19:39:36 1 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:36 2 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:36 5 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:36 3 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:36 4 在 term 7 触发心跳, state: 2, 
+2023/05/06 19:39:36 0 在 term 5 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:36 0 在 term 5 成为follower
+2023/05/06 19:39:36 2 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:36 3 在 term 7 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:36 6 在 term 8 收到 4 的 AppendEntries request &{Term:7 LeaderId:4}
+2023/05/06 19:39:36 4 在 term 8 成为follower
+2023/05/06 19:39:36 4 在 term 9 成为了Candidate然后发起了投票
+2023/05/06 19:39:36 0 在 term: 7 收到了来自 4 的RequestVote request , args: &{Term:9 CandidateId:4}
+2023/05/06 19:39:36 0 在 term 9 给 4 投票
+2023/05/06 19:39:36 3 在 term: 7 收到了来自 4 的RequestVote request , args: &{Term:9 CandidateId:4}
+2023/05/06 19:39:36 3 在 term 9 给 4 投票
+2023/05/06 19:39:36 2 在 term: 7 收到了来自 4 的RequestVote request , args: &{Term:9 CandidateId:4}
+2023/05/06 19:39:36 2 在 term 9 给 4 投票
+2023/05/06 19:39:36 4 在 term 9 收到了 3 的投票，现在票数 2
+2023/05/06 19:39:36 4 在 term 9 收到了 2 的投票，现在票数 3
+2023/05/06 19:39:36 4 在 term 9 收到了 0 的投票，现在票数 4
+2023/05/06 19:39:36 4 在 term 9 成为Leader
+2023/05/06 19:39:36 6 在 term: 8 收到了来自 4 的RequestVote request , args: &{Term:9 CandidateId:4}
+2023/05/06 19:39:36 6 在 term 9 给 4 投票
+2023/05/06 19:39:36 6 在 term 10 成为了Candidate然后发起了投票
+2023/05/06 19:39:36 3 在 term: 9 收到了来自 6 的RequestVote request , args: &{Term:10 CandidateId:6}
+2023/05/06 19:39:36 3 在 term 10 给 6 投票
+2023/05/06 19:39:36 4 在 term: 9 收到了来自 6 的RequestVote request , args: &{Term:10 CandidateId:6}
+2023/05/06 19:39:36 4 在 term 10 给 6 投票
+2023/05/06 19:39:36 6 在 term 10 收到了 3 的投票，现在票数 2
+2023/05/06 19:39:36 6 在 term 10 收到了 4 的投票，现在票数 3
+2023/05/06 19:39:36 2 在 term: 9 收到了来自 6 的RequestVote request , args: &{Term:10 CandidateId:6}
+2023/05/06 19:39:36 2 在 term 10 给 6 投票
+2023/05/06 19:39:36 6 在 term 10 收到了 2 的投票，现在票数 4
+2023/05/06 19:39:36 6 在 term 10 成为Leader
+2023/05/06 19:39:36 0 在 term: 9 收到了来自 6 的RequestVote request , args: &{Term:10 CandidateId:6}
+2023/05/06 19:39:36 0 在 term 10 给 6 投票
+2023/05/06 19:39:36 1 在 term 8 成为了Candidate然后发起了投票
+2023/05/06 19:39:36 5 在 term 8 成为了Candidate然后发起了投票
+2023/05/06 19:39:36 6 在 term 10 触发心跳, state: 2, 
+2023/05/06 19:39:36 0 在 term 10 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:36 2 在 term 10 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:36 4 在 term 10 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:36 3 在 term 10 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:36 6 在 term 10 触发心跳, state: 2, 
+2023/05/06 19:39:36 4 在 term 10 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:36 3 在 term 10 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:36 2 在 term 10 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:36 0 在 term 10 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:36 6 在 term 10 触发心跳, state: 2, 
+2023/05/06 19:39:36 6 在 term 10 触发心跳, state: 2, 
+2023/05/06 19:39:36 1 在 term 9 成为了Candidate然后发起了投票
+2023/05/06 19:39:36 5 在 term 9 成为了Candidate然后发起了投票
+2023/05/06 19:39:36 3 在 term: 10 收到了来自 5 的RequestVote request , args: &{Term:9 CandidateId:5}
+2023/05/06 19:39:36 5 在 term 10 成为follower
+2023/05/06 19:39:36 0 在 term: 10 收到了来自 5 的RequestVote request , args: &{Term:9 CandidateId:5}
+2023/05/06 19:39:36 4 在 term: 10 收到了来自 5 的RequestVote request , args: &{Term:9 CandidateId:5}
+2023/05/06 19:39:36 6 在 term 10 触发心跳, state: 2, 
+2023/05/06 19:39:36 4 在 term 11 成为了Candidate然后发起了投票
+2023/05/06 19:39:36 0 在 term: 10 收到了来自 4 的RequestVote request , args: &{Term:11 CandidateId:4}
+2023/05/06 19:39:36 0 在 term 11 给 4 投票
+2023/05/06 19:39:36 3 在 term: 10 收到了来自 4 的RequestVote request , args: &{Term:11 CandidateId:4}
+2023/05/06 19:39:36 3 在 term 11 给 4 投票
+2023/05/06 19:39:36 4 在 term 11 收到了 0 的投票，现在票数 2
+2023/05/06 19:39:36 4 在 term 11 收到了 3 的投票，现在票数 3
+2023/05/06 19:39:36 5 在 term: 10 收到了来自 4 的RequestVote request , args: &{Term:11 CandidateId:4}
+2023/05/06 19:39:36 5 在 term 11 给 4 投票
+2023/05/06 19:39:36 4 在 term 11 收到了 5 的投票，现在票数 4
+2023/05/06 19:39:36 4 在 term 11 成为Leader
+2023/05/06 19:39:36 3 在 term 12 成为了Candidate然后发起了投票
+2023/05/06 19:39:36 0 在 term: 11 收到了来自 3 的RequestVote request , args: &{Term:12 CandidateId:3}
+2023/05/06 19:39:36 0 在 term 12 给 3 投票
+2023/05/06 19:39:36 4 在 term: 11 收到了来自 3 的RequestVote request , args: &{Term:12 CandidateId:3}
+2023/05/06 19:39:36 4 在 term 12 给 3 投票
+2023/05/06 19:39:36 3 在 term 12 收到了 0 的投票，现在票数 2
+2023/05/06 19:39:36 3 在 term 12 收到了 4 的投票，现在票数 3
+2023/05/06 19:39:36 5 在 term: 11 收到了来自 3 的RequestVote request , args: &{Term:12 CandidateId:3}
+2023/05/06 19:39:36 5 在 term 12 给 3 投票
+2023/05/06 19:39:36 3 在 term 12 收到了 5 的投票，现在票数 4
+2023/05/06 19:39:36 3 在 term 12 成为Leader
+2023/05/06 19:39:36 0 在 term 13 成为了Candidate然后发起了投票
+2023/05/06 19:39:36 5 在 term: 12 收到了来自 0 的RequestVote request , args: &{Term:13 CandidateId:0}
+2023/05/06 19:39:36 5 在 term 13 给 0 投票
+2023/05/06 19:39:36 0 在 term 13 收到了 5 的投票，现在票数 2
+2023/05/06 19:39:36 3 在 term: 12 收到了来自 0 的RequestVote request , args: &{Term:13 CandidateId:0}
+2023/05/06 19:39:36 3 在 term 13 给 0 投票
+2023/05/06 19:39:36 0 在 term 13 收到了 3 的投票，现在票数 3
+2023/05/06 19:39:36 4 在 term: 12 收到了来自 0 的RequestVote request , args: &{Term:13 CandidateId:0}
+2023/05/06 19:39:36 4 在 term 13 给 0 投票
+2023/05/06 19:39:36 0 在 term 13 收到了 4 的投票，现在票数 4
+2023/05/06 19:39:36 0 在 term 13 成为Leader
+2023/05/06 19:39:36 6 在 term 10 触发心跳, state: 2, 
+2023/05/06 19:39:37 2 在 term 11 成为了Candidate然后发起了投票
+2023/05/06 19:39:37 0 在 term 13 触发心跳, state: 2, 
+2023/05/06 19:39:37 3 在 term 13 收到 0 的 AppendEntries request &{Term:13 LeaderId:0}
+2023/05/06 19:39:37 4 在 term 13 收到 0 的 AppendEntries request &{Term:13 LeaderId:0}
+2023/05/06 19:39:37 5 在 term 13 收到 0 的 AppendEntries request &{Term:13 LeaderId:0}
+2023/05/06 19:39:37 6 在 term 10 触发心跳, state: 2, 
+2023/05/06 19:39:37 0 在 term 13 触发心跳, state: 2, 
+2023/05/06 19:39:37 4 在 term 13 收到 0 的 AppendEntries request &{Term:13 LeaderId:0}
+2023/05/06 19:39:37 3 在 term 13 收到 0 的 AppendEntries request &{Term:13 LeaderId:0}
+2023/05/06 19:39:37 5 在 term 13 收到 0 的 AppendEntries request &{Term:13 LeaderId:0}
+2023/05/06 19:39:37 6 在 term 10 触发心跳, state: 2, 
+2023/05/06 19:39:37 1 在 term 10 成为了Candidate然后发起了投票
+2023/05/06 19:39:37 0 在 term 13 触发心跳, state: 2, 
+2023/05/06 19:39:37 6 在 term 10 触发心跳, state: 2, 
+2023/05/06 19:39:37 5 在 term 13 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:37 1 在 term 10 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:37 3 在 term 13 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:37 6 在 term 13 成为follower
+2023/05/06 19:39:37 2 在 term 11 收到 6 的 AppendEntries request &{Term:10 LeaderId:6}
+2023/05/06 19:39:37 2 在 term 12 成为了Candidate然后发起了投票
+2023/05/06 19:39:37 6 在 term: 13 收到了来自 2 的RequestVote request , args: &{Term:12 CandidateId:2}
+2023/05/06 19:39:37 5 在 term: 13 收到了来自 2 的RequestVote request , args: &{Term:12 CandidateId:2}
+2023/05/06 19:39:37 2 在 term 13 成为follower
+2023/05/06 19:39:37 1 在 term: 10 收到了来自 2 的RequestVote request , args: &{Term:12 CandidateId:2}
+2023/05/06 19:39:37 1 在 term 12 给 2 投票
+2023/05/06 19:39:37 3 在 term: 13 收到了来自 2 的RequestVote request , args: &{Term:12 CandidateId:2}
+2023/05/06 19:39:37 0 在 term 13 触发心跳, state: 2, 
+2023/05/06 19:39:37 6 在 term 14 成为了Candidate然后发起了投票
+2023/05/06 19:39:37 5 在 term: 13 收到了来自 6 的RequestVote request , args: &{Term:14 CandidateId:6}
+2023/05/06 19:39:37 5 在 term 14 给 6 投票
+2023/05/06 19:39:37 6 在 term 14 收到了 5 的投票，现在票数 2
+2023/05/06 19:39:37 3 在 term: 13 收到了来自 6 的RequestVote request , args: &{Term:14 CandidateId:6}
+2023/05/06 19:39:37 3 在 term 14 给 6 投票
+2023/05/06 19:39:37 6 在 term 14 收到了 3 的投票，现在票数 3
+2023/05/06 19:39:37 2 在 term: 13 收到了来自 6 的RequestVote request , args: &{Term:14 CandidateId:6}
+2023/05/06 19:39:37 2 在 term 14 给 6 投票
+2023/05/06 19:39:37 1 在 term: 12 收到了来自 6 的RequestVote request , args: &{Term:14 CandidateId:6}
+2023/05/06 19:39:37 1 在 term 14 给 6 投票
+2023/05/06 19:39:37 6 在 term 14 收到了 1 的投票，现在票数 4
+2023/05/06 19:39:37 6 在 term 14 成为Leader
+2023/05/06 19:39:37 0 在 term 13 触发心跳, state: 2, 
+2023/05/06 19:39:37 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:37 3 在 term 14 收到 6 的 AppendEntries request &{Term:14 LeaderId:6}
+2023/05/06 19:39:37 2 在 term 14 收到 6 的 AppendEntries request &{Term:14 LeaderId:6}
+2023/05/06 19:39:37 1 在 term 14 收到 6 的 AppendEntries request &{Term:14 LeaderId:6}
+2023/05/06 19:39:37 5 在 term 14 收到 6 的 AppendEntries request &{Term:14 LeaderId:6}
+2023/05/06 19:39:37 0 在 term 13 触发心跳, state: 2, 
+2023/05/06 19:39:37 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:37 3 在 term 14 收到 6 的 AppendEntries request &{Term:14 LeaderId:6}
+2023/05/06 19:39:37 5 在 term 14 收到 6 的 AppendEntries request &{Term:14 LeaderId:6}
+2023/05/06 19:39:37 1 在 term 14 收到 6 的 AppendEntries request &{Term:14 LeaderId:6}
+2023/05/06 19:39:37 2 在 term 14 收到 6 的 AppendEntries request &{Term:14 LeaderId:6}
+2023/05/06 19:39:37 4 在 term 14 成为了Candidate然后发起了投票
+2023/05/06 19:39:37 0 在 term 13 触发心跳, state: 2, 
+2023/05/06 19:39:37 3 在 term 14 收到 0 的 AppendEntries request &{Term:13 LeaderId:0}
+2023/05/06 19:39:37 0 在 term 14 成为follower
+2023/05/06 19:39:37 5 在 term 14 收到 0 的 AppendEntries request &{Term:13 LeaderId:0}
+2023/05/06 19:39:37 2 在 term 14 收到 0 的 AppendEntries request &{Term:13 LeaderId:0}
+2023/05/06 19:39:37 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:37 0 在 term 15 成为了Candidate然后发起了投票
+2023/05/06 19:39:37 5 在 term: 14 收到了来自 0 的RequestVote request , args: &{Term:15 CandidateId:0}
+2023/05/06 19:39:37 5 在 term 15 给 0 投票
+2023/05/06 19:39:37 0 在 term 15 收到了 5 的投票，现在票数 2
+2023/05/06 19:39:37 2 在 term: 14 收到了来自 0 的RequestVote request , args: &{Term:15 CandidateId:0}
+2023/05/06 19:39:37 2 在 term 15 给 0 投票
+2023/05/06 19:39:37 0 在 term 15 收到了 2 的投票，现在票数 3
+2023/05/06 19:39:37 3 在 term: 14 收到了来自 0 的RequestVote request , args: &{Term:15 CandidateId:0}
+2023/05/06 19:39:37 3 在 term 15 给 0 投票
+2023/05/06 19:39:37 0 在 term 15 收到了 3 的投票，现在票数 4
+2023/05/06 19:39:37 0 在 term 15 成为Leader
+2023/05/06 19:39:37 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:37 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:37 2 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:37 3 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:37 5 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:37 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:37 1 在 term 15 成为了Candidate然后发起了投票
+2023/05/06 19:39:37 4 在 term 15 成为了Candidate然后发起了投票
+2023/05/06 19:39:37 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:37 2 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:37 5 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:37 3 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:37 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:38 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:38 3 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:38 5 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:38 2 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:38 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:38 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:38 2 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:38 3 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:38 5 在 term 15 收到 0 的 AppendEntries request &{Term:15 LeaderId:0}
+2023/05/06 19:39:38 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:38 1 在 term 16 成为了Candidate然后发起了投票
+2023/05/06 19:39:38 5 在 term: 15 收到了来自 1 的RequestVote request , args: &{Term:16 CandidateId:1}
+2023/05/06 19:39:38 5 在 term 16 给 1 投票
+2023/05/06 19:39:38 1 在 term 16 收到了 5 的投票，现在票数 2
+2023/05/06 19:39:38 4 在 term: 15 收到了来自 1 的RequestVote request , args: &{Term:16 CandidateId:1}
+2023/05/06 19:39:38 4 在 term 16 给 1 投票
+2023/05/06 19:39:38 1 在 term 16 收到了 4 的投票，现在票数 3
+2023/05/06 19:39:38 3 在 term: 15 收到了来自 1 的RequestVote request , args: &{Term:16 CandidateId:1}
+2023/05/06 19:39:38 3 在 term 16 给 1 投票
+2023/05/06 19:39:38 1 在 term 16 收到了 3 的投票，现在票数 4
+2023/05/06 19:39:38 1 在 term 16 成为Leader
+2023/05/06 19:39:38 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:38 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:38 1 在 term 16 触发心跳, state: 2, 
+2023/05/06 19:39:38 4 在 term 16 收到 1 的 AppendEntries request &{Term:16 LeaderId:1}
+2023/05/06 19:39:38 3 在 term 16 收到 1 的 AppendEntries request &{Term:16 LeaderId:1}
+2023/05/06 19:39:38 5 在 term 16 收到 1 的 AppendEntries request &{Term:16 LeaderId:1}
+2023/05/06 19:39:38 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:38 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:38 1 在 term 16 触发心跳, state: 2, 
+2023/05/06 19:39:38 5 在 term 16 收到 1 的 AppendEntries request &{Term:16 LeaderId:1}
+2023/05/06 19:39:38 4 在 term 16 收到 1 的 AppendEntries request &{Term:16 LeaderId:1}
+2023/05/06 19:39:38 2 在 term 16 成为了Candidate然后发起了投票
+2023/05/06 19:39:38 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:38 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:38 3 在 term 16 收到 1 的 AppendEntries request &{Term:16 LeaderId:1}
+2023/05/06 19:39:38 1 在 term 16 触发心跳, state: 2, 
+2023/05/06 19:39:38 5 在 term 16 收到 1 的 AppendEntries request &{Term:16 LeaderId:1}
+2023/05/06 19:39:38 4 在 term 16 收到 1 的 AppendEntries request &{Term:16 LeaderId:1}
+2023/05/06 19:39:38 3 在 term 16 收到 1 的 AppendEntries request &{Term:16 LeaderId:1}
+2023/05/06 19:39:38 6 在 term 14 触发心跳, state: 2, 
+2023/05/06 19:39:38 1 在 term 16 收到 6 的 AppendEntries request &{Term:14 LeaderId:6}
+2023/05/06 19:39:38 4 在 term 16 收到 6 的 AppendEntries request &{Term:14 LeaderId:6}
+2023/05/06 19:39:38 6 在 term 16 成为follower
+2023/05/06 19:39:38 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:38 2 在 term 17 成为了Candidate然后发起了投票
+2023/05/06 19:39:38 1 在 term: 16 收到了来自 2 的RequestVote request , args: &{Term:17 CandidateId:2}
+2023/05/06 19:39:38 1 在 term 17 给 2 投票
+2023/05/06 19:39:38 2 在 term 17 收到了 1 的投票，现在票数 2
+2023/05/06 19:39:38 1 在 term 18 成为了Candidate然后发起了投票
+2023/05/06 19:39:38 2 在 term: 17 收到了来自 1 的RequestVote request , args: &{Term:18 CandidateId:1}
+2023/05/06 19:39:38 2 在 term 18 给 1 投票
+2023/05/06 19:39:38 4 在 term: 16 收到了来自 2 的RequestVote request , args: &{Term:17 CandidateId:2}
+2023/05/06 19:39:38 4 在 term 17 给 2 投票
+2023/05/06 19:39:38 6 在 term: 16 收到了来自 2 的RequestVote request , args: &{Term:17 CandidateId:2}
+2023/05/06 19:39:38 6 在 term 17 给 2 投票
+2023/05/06 19:39:38 6 在 term: 17 收到了来自 1 的RequestVote request , args: &{Term:18 CandidateId:1}
+2023/05/06 19:39:38 4 在 term: 17 收到了来自 1 的RequestVote request , args: &{Term:18 CandidateId:1}
+2023/05/06 19:39:38 4 在 term 18 给 1 投票
+2023/05/06 19:39:38 1 在 term 18 收到了 2 的投票，现在票数 2
+2023/05/06 19:39:38 6 在 term 18 给 1 投票
+2023/05/06 19:39:38 1 在 term 18 收到了 4 的投票，现在票数 3
+2023/05/06 19:39:38 1 在 term 18 收到了 6 的投票，现在票数 4
+2023/05/06 19:39:38 1 在 term 18 成为Leader
+2023/05/06 19:39:38 6 在 term 19 成为了Candidate然后发起了投票
+2023/05/06 19:39:38 2 在 term: 18 收到了来自 6 的RequestVote request , args: &{Term:19 CandidateId:6}
+2023/05/06 19:39:38 2 在 term 19 给 6 投票
+2023/05/06 19:39:38 6 在 term 19 收到了 2 的投票，现在票数 2
+2023/05/06 19:39:38 4 在 term: 18 收到了来自 6 的RequestVote request , args: &{Term:19 CandidateId:6}
+2023/05/06 19:39:38 4 在 term 19 给 6 投票
+2023/05/06 19:39:38 6 在 term 19 收到了 4 的投票，现在票数 3
+2023/05/06 19:39:38 1 在 term: 18 收到了来自 6 的RequestVote request , args: &{Term:19 CandidateId:6}
+2023/05/06 19:39:38 1 在 term 19 给 6 投票
+2023/05/06 19:39:38 6 在 term 19 收到了 1 的投票，现在票数 4
+2023/05/06 19:39:38 6 在 term 19 成为Leader
+2023/05/06 19:39:38 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:38 6 在 term 19 触发心跳, state: 2, 
+2023/05/06 19:39:38 2 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:38 1 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:38 4 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:38 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:38 3 在 term 17 成为了Candidate然后发起了投票
+2023/05/06 19:39:38 6 在 term 19 触发心跳, state: 2, 
+2023/05/06 19:39:38 1 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:38 2 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:38 4 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:39 5 在 term 17 成为了Candidate然后发起了投票
+2023/05/06 19:39:39 6 在 term 19 触发心跳, state: 2, 
+2023/05/06 19:39:39 1 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 2 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 4 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 0 在 term 15 触发心跳, state: 2, 
+2023/05/06 19:39:39 6 在 term 19 触发心跳, state: 2, 
+2023/05/06 19:39:39 5 在 term 17 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 5 在 term 17 成为follower
+2023/05/06 19:39:39 0 在 term 15 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 0 在 term 15 成为follower
+2023/05/06 19:39:39 1 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 3 在 term 17 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 3 在 term 17 成为follower
+2023/05/06 19:39:39 4 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 2 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 6 在 term 19 触发心跳, state: 2, 
+2023/05/06 19:39:39 0 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 2 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 1 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 4 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 3 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 5 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 6 在 term 19 触发心跳, state: 2, 
+2023/05/06 19:39:39 4 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 0 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 5 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 3 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 1 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 2 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 6 在 term 19 触发心跳, state: 2, 
+2023/05/06 19:39:39 0 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 5 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 2 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 4 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 3 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 1 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 6 在 term 19 触发心跳, state: 2, 
+2023/05/06 19:39:39 4 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 5 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 1 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 2 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 3 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+2023/05/06 19:39:39 0 在 term 19 收到 6 的 AppendEntries request &{Term:19 LeaderId:6}
+  ... Passed --   5.4  7  639   54456    0
+PASS
+ok  	6.824/raft	13.473s
