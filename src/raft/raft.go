@@ -53,6 +53,11 @@ type ApplyMsg struct {
 }
 
 const null int = -1
+const (
+	Candidate = iota
+	Follower
+	Leader
+)
 
 var rflog *log.Logger
 var rflogFile *os.File
@@ -82,6 +87,7 @@ type Raft struct {
 	// 在当前任期内，此节点将选票投给了谁。
 	//一个任期内，节点只能将选票投给某一个节点。因此当节点任期更新时要将 votedfor 置为 null。
 	votedFor int
+	state    int
 }
 
 type Log struct {
@@ -221,7 +227,10 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		reply.Success = false
 		reply.Term = rf.currentTerm
 	} else if args.Term > rf.currentTerm {
+		// 如果对方任期大于自己的话，转为follower并且重置votedfor
 		reply.Success = true
+		rf.state = Follower
+		rf.votedFor = -1
 	}
 }
 
