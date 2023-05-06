@@ -18,14 +18,16 @@ package raft
 //
 
 import (
-//	"bytes"
+	//	"bytes"
+	"log"
+	"os"
+	"strconv"
 	"sync"
 	"sync/atomic"
 
-//	"6.824/labgob"
+	//	"6.824/labgob"
 	"6.824/labrpc"
 )
-
 
 //
 // as each Raft peer becomes aware that successive log entries are
@@ -50,6 +52,18 @@ type ApplyMsg struct {
 	SnapshotIndex int
 }
 
+const null int = 0
+
+var rflog *log.Logger
+var rflogFile *os.File
+
+func rflogInit() {
+	rfserver := os.Getpid()
+	logName := "rfserver" + strconv.Itoa(rfserver) + ".log"
+	rflogFile, _ = os.Create(logName)
+	rflog = log.New(rflogFile, "", log.Lmicroseconds|log.Lshortfile)
+}
+
 //
 // A Go object implementing a single Raft peer.
 //
@@ -63,7 +77,17 @@ type Raft struct {
 	// Your data here (2A, 2B, 2C).
 	// Look at the paper's Figure 2 for a description of what
 	// state a Raft server must maintain.
+	// 2A:只考虑选举情况
+	currentTerm int // 此节点的任期
+	// 在当前任期内，此节点将选票投给了谁。
+	//一个任期内，节点只能将选票投给某一个节点。因此当节点任期更新时要将 votedfor 置为 null。
+	votedFor int
+}
 
+type Log struct {
+	index   int    // 该记录在日志中的位置
+	term    int    // 该记录首次被创建时的任期号
+	command string // 命令
 }
 
 // return currentTerm and whether this server
@@ -92,7 +116,6 @@ func (rf *Raft) persist() {
 	// rf.persister.SaveRaftState(data)
 }
 
-
 //
 // restore previously persisted state.
 //
@@ -115,7 +138,6 @@ func (rf *Raft) readPersist(data []byte) {
 	// }
 }
 
-
 //
 // A service wants to switch to snapshot.  Only do so if Raft hasn't
 // have more recent info since it communicate the snapshot on applyCh.
@@ -136,13 +158,15 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 
 }
 
-
 //
 // example RequestVote RPC arguments structure.
 // field names must start with capital letters!
 //
 type RequestVoteArgs struct {
 	// Your data here (2A, 2B).
+	// 2A:只考虑选举情况
+	term        int // Candidate的任期
+	candidateId int // candidate请求投票
 }
 
 //
@@ -151,13 +175,54 @@ type RequestVoteArgs struct {
 //
 type RequestVoteReply struct {
 	// Your data here (2A).
+	// 2A:只考虑选举情况
+	term        int  // 此节点的任期。假如 Candidate 发现 Follower 的任期高于自己，则会放弃 Candidate 身份并更新自己的任期。
+	voteGranted bool // 是否同意candidated当选，true表示同意
 }
 
 //
 // example RequestVote RPC handler.
-//
+// 请求投票RPC
 func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	// Your code here (2A, 2B).
+	// 2A:只考虑选举情况
+	// 如果term < currentTerm,拒绝投票，否则如果rf.votedFor == null or candidateId同意
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	if args.term < rf.currentTerm {
+		reply.term = rf.currentTerm
+		reply.voteGranted = false
+		rflog.Printf("%d rfserver has refused vote to %d in %d", rf.me, args.candidateId, args.term)
+	} else {
+		// 这里之后2C要考虑重复投票的问题
+		if rf.votedFor == null || rf.votedFor == args.candidateId {
+			rf.votedFor = args.candidateId
+			reply.voteGranted = true
+			rflog.Printf("%d rfserver has granted vote to %d in %d", rf.me, args.candidateId, args.term)
+		}
+	}
+}
+
+// 在领导选举的过程中，AppendEntries RPC 用来实现 Leader 的心跳机制。节点的 AppendEntries RPC 会被 Leader 定期调用。
+type AppendEntriesArgs struct {
+	term     int // Leader 的任期
+	leaderId int // Client 可能将请求发送至 Follower 节点，得知 leaderId 后 Follower 可将 Client 的请求重定位至 Leader 节点
+}
+
+type AppendEntriesReply struct {
+	term    int  //此节点的任期,假如 Leader 发现 Follower 的任期高于自己，则会放弃 Leader 身份并更新自己的任期。
+	success bool // 此节点是否认同 Leader 发送的心跳。
+}
+
+func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply) {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	if args.term < rf.currentTerm {
+		reply.success = false
+		reply.term = rf.currentTerm
+	} else {
+		reply.success = true
+	}
 }
 
 //
@@ -194,6 +259,10 @@ func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *Reques
 	return ok
 }
 
+func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
+	ok := rf.peers[server].Call("Raft.AppendEntries", args, reply)
+	return ok
+}
 
 //
 // the service using Raft (e.g. a k/v server) wants to start
@@ -215,7 +284,6 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	isLeader := true
 
 	// Your code here (2B).
-
 
 	return index, term, isLeader
 }
@@ -249,6 +317,7 @@ func (rf *Raft) ticker() {
 		// Your code here to check if a leader election should
 		// be started and to randomize sleeping time using
 		// time.Sleep().
+		// TODO:2A
 
 	}
 }
@@ -272,13 +341,12 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 
 	// Your initialization code here (2A, 2B, 2C).
-
+	rflogInit()
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
 	// start ticker goroutine to start elections
 	go rf.ticker()
-
 
 	return rf
 }
