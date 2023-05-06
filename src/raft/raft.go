@@ -208,7 +208,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	if args.Term > rf.currentTerm {
 		rf.currentTerm = args.Term
 		rf.votedFor = args.CandidateId
-		rf.state = Follower
+		rf.toFollower()
 	}
 
 	if rf.votedFor == -1 || rf.votedFor == args.CandidateId {
@@ -445,6 +445,7 @@ func (rf *Raft) election() {
 	}
 }
 
+// leader才可以发送心跳
 func (rf *Raft) heartbeat() {
 	rf.mu.Lock()
 	// 2B时要添加
