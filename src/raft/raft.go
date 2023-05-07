@@ -494,11 +494,9 @@ func (rf *Raft) resetElectionTime() {
 // heartsbeats recently.
 func (rf *Raft) ticker() {
 	for rf.killed() == false {
-
 		// Your code here to check if a leader election should
 		// be started and to randomize sleeping time using
 		// time.Sleep().
-		// TODO:2A
 		rf.mu.Lock()
 		if rf.state != Leader && time.Now().After(rf.electionTime) {
 			// 开启选举
