@@ -19,11 +19,11 @@ package raft
 
 import (
 	//	"bytes"
-	"log"
-	"os"
-	"strconv"
+
+	"math/rand"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	//	"6.824/labgob"
 	"6.824/labrpc"
@@ -51,18 +51,19 @@ type ApplyMsg struct {
 	SnapshotTerm  int
 	SnapshotIndex int
 }
+type RaftState int
 
-const null int = 0
+const (
+	Follower  RaftState = 0
+	Candidate RaftState = 1
+	Leader    RaftState = 2
+)
 
-var rflog *log.Logger
-var rflogFile *os.File
-
-func rflogInit() {
-	rfserver := os.Getpid()
-	logName := "rfserver" + strconv.Itoa(rfserver) + ".log"
-	rflogFile, _ = os.Create(logName)
-	rflog = log.New(rflogFile, "", log.Lmicroseconds|log.Lshortfile)
-}
+const (
+	heartsbeatsMs     = 100
+	electionTimeMinMs = 250
+	electionTimeMaxMs = 400
+)
 
 //
 // A Go object implementing a single Raft peer.
@@ -77,17 +78,20 @@ type Raft struct {
 	// Your data here (2A, 2B, 2C).
 	// Look at the paper's Figure 2 for a description of what
 	// state a Raft server must maintain.
-	// 2A:只考虑选举情况
+
+	// Persistent state on all servers
 	currentTerm int // 此节点的任期
-	// 在当前任期内，此节点将选票投给了谁。
-	//一个任期内，节点只能将选票投给某一个节点。因此当节点任期更新时要将 votedfor 置为 null。
-	votedFor int
+	votedFor    int // 此节点投票给了谁
+
+	//pivate:
+	electionTime time.Time
+	state        RaftState
 }
 
 type Log struct {
-	index   int    // 该记录在日志中的位置
-	term    int    // 该记录首次被创建时的任期号
-	command string // 命令
+	index   int         // 该记录在日志中的位置
+	term    int         // 该记录首次被创建时的任期号
+	command interface{} // 命令
 }
 
 // return currentTerm and whether this server
@@ -97,6 +101,10 @@ func (rf *Raft) GetState() (int, bool) {
 	var term int
 	var isleader bool
 	// Your code here (2A).
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	term = rf.currentTerm
+	isleader = rf.state == Leader
 	return term, isleader
 }
 
@@ -164,9 +172,8 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 //
 type RequestVoteArgs struct {
 	// Your data here (2A, 2B).
-	// 2A:只考虑选举情况
-	term        int // Candidate的任期
-	candidateId int // candidate请求投票
+	Term        int // Candidate的任期
+	CandidateId int // candidate请求投票
 }
 
 //
@@ -175,9 +182,8 @@ type RequestVoteArgs struct {
 //
 type RequestVoteReply struct {
 	// Your data here (2A).
-	// 2A:只考虑选举情况
-	term        int  // 此节点的任期。假如 Candidate 发现 Follower 的任期高于自己，则会放弃 Candidate 身份并更新自己的任期。
-	voteGranted bool // 是否同意candidated当选，true表示同意
+	Term        int  // 此节点的任期。假如 Candidate 发现 Follower 的任期高于自己，则会放弃 Candidate 身份并更新自己的任期。
+	VoteGranted bool // 是否同意candidated当选，true表示同意
 }
 
 //
@@ -185,44 +191,67 @@ type RequestVoteReply struct {
 // 请求投票RPC
 func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	// Your code here (2A, 2B).
-	// 2A:只考虑选举情况
 	// 如果term < currentTerm,拒绝投票，否则如果rf.votedFor == null or candidateId同意
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	if args.term < rf.currentTerm {
-		reply.term = rf.currentTerm
-		reply.voteGranted = false
-		rflog.Printf("%d rfserver has refused vote to %d in %d", rf.me, args.candidateId, args.term)
-	} else {
-		// 这里之后2C要考虑重复投票的问题
-		if rf.votedFor == null || rf.votedFor == args.candidateId {
-			rf.votedFor = args.candidateId
-			reply.voteGranted = true
-			rflog.Printf("%d rfserver has granted vote to %d in %d", rf.me, args.candidateId, args.term)
-		}
+	//  Reply false if term < currentTerm 如果args的term小于rf当前任期，拒绝投票
+	if args.Term < rf.currentTerm {
+		reply.Term = rf.currentTerm
+		reply.VoteGranted = false
+		return
+	}
+	// term T > currentTerm:
+	//      1.set currentTerm = T,
+	// 		2. convert to follower
+	//      3. 论文隐含了一定要重置选票，不然可能会导致后面投不了票的
+	if args.Term > rf.currentTerm {
+		rf.currentTerm = args.Term
+		rf.state = Follower
+		rf.votedFor = -1
+	}
+	// 到这里一定有rf.currentTerm == args.term了, 所以必然会有args.term == reply.term了，后面double check才要检查
+	reply.Term = rf.currentTerm
+	if rf.votedFor == -1 || rf.votedFor == args.CandidateId {
+		DPrintf("%d 在 term %d 给 %d 投票", rf.me, rf.currentTerm, args.CandidateId)
+		reply.VoteGranted = true
+		rf.votedFor = args.CandidateId
+		// 给其它节点投票了也要重置超时时间
+		rf.resetElectionTime()
 	}
 }
 
 // 在领导选举的过程中，AppendEntries RPC 用来实现 Leader 的心跳机制。节点的 AppendEntries RPC 会被 Leader 定期调用。
 type AppendEntriesArgs struct {
-	term     int // Leader 的任期
-	leaderId int // Client 可能将请求发送至 Follower 节点，得知 leaderId 后 Follower 可将 Client 的请求重定位至 Leader 节点
+	Term     int // Leader 的任期
+	LeaderId int // Client 可能将请求发送至 Follower 节点，得知 leaderId 后 Follower 可将 Client 的请求重定位至 Leader 节点
 }
 
 type AppendEntriesReply struct {
-	term    int  //此节点的任期,假如 Leader 发现 Follower 的任期高于自己，则会放弃 Leader 身份并更新自己的任期。
-	success bool // 此节点是否认同 Leader 发送的心跳。
+	Term    int  //此节点的任期,假如 Leader 发现 Follower 的任期高于自己，则会放弃 Leader 身份并更新自己的任期。
+	Success bool // 此节点是否认同 Leader 发送的心跳。
 }
 
 func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	if args.term < rf.currentTerm {
-		reply.success = false
-		reply.term = rf.currentTerm
-	} else {
-		reply.success = true
+	//  Reply false if term < currentTerm
+	if args.Term < rf.currentTerm {
+		reply.Success = false
+		reply.Term = rf.currentTerm
+		return
 	}
+	//     term T > currentTerm:
+	//      1.set currentTerm = T,
+	// 		2. convert to follower
+	//      3. 论文隐含了一定要重置选票
+	if args.Term > rf.currentTerm {
+		rf.currentTerm = args.Term
+		rf.state = Follower
+		rf.votedFor = -1
+	}
+	// 收到心跳重置超时时间
+	rf.resetElectionTime()
+	reply.Term = rf.currentTerm
 }
 
 //
@@ -309,6 +338,158 @@ func (rf *Raft) killed() bool {
 	return z == 1
 }
 
+func (rf *Raft) loadState() RaftState {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	return rf.state
+}
+
+func (rf *Raft) loadElectionTime() time.Time {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	return rf.electionTime
+}
+
+// 三个转换形态函数使用前都要加锁
+// 成为跟随者
+func (rf *Raft) toFollower() {
+	DPrintf("%d 在term %d 变成了Follower", rf.me, rf.currentTerm)
+	rf.state = Follower
+}
+
+// 成为候选人，任期+1，投自己一票，重置选举时间
+func (rf *Raft) toCandidate() {
+	rf.currentTerm++
+	rf.votedFor = rf.me
+	rf.state = Candidate
+	rf.resetElectionTime()
+	DPrintf("%d 在term %d 变成了Candidate并发起选举", rf.me, rf.currentTerm)
+}
+
+// 成为leader，开启心跳
+func (rf *Raft) toLeader() {
+	DPrintf("%d 在term %d 变成了Leader", rf.me, rf.currentTerm)
+	rf.state = Leader
+	// 开启心跳
+	go rf.heartsbeat()
+}
+
+func (rf *Raft) election() {
+	rf.mu.Lock()
+	// 成为Ccandidate
+	rf.toCandidate()
+	// 请求选票的RequestVoteArgs都要相同
+	args := &RequestVoteArgs{
+		Term:        rf.currentTerm,
+		CandidateId: rf.me,
+	}
+	voteCount := 1
+	rf.mu.Unlock()
+	// DPrintf("%d 在term %d 开始发起选举", rf.me, rf.currentTerm)
+	for i := range rf.peers {
+		if i == rf.me {
+			continue
+		}
+		go rf.requestVotetoAllPeer(i, args, &voteCount)
+	}
+}
+
+func (rf *Raft) requestVotetoAllPeer(serverId int, args *RequestVoteArgs, voteCount *int) {
+	replys := &RequestVoteReply{}
+	rf.mu.Lock()
+	// 每次请求投票时一定要看看自己还是不是Candidate
+	if rf.state != Candidate {
+		rf.mu.Unlock()
+		return
+	}
+	rf.mu.Unlock()
+	if ok := rf.sendRequestVote(serverId, args, replys); !ok {
+		// 这里不加锁会data race
+		// DPrintf("%d 在term %d 发送给 %d 请求投票RPC失败", rf.me, rf.currentTerm, i)
+		return
+	}
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	//  term T > currentTerm: set currentTerm = T, convert to follower
+	if replys.Term > rf.currentTerm {
+		rf.currentTerm = replys.Term
+		rf.votedFor = -1 // 一定要重置选票
+		rf.toFollower()
+		return
+	}
+	// double check，因为有可能发起新一轮选举了，才收到这个消息
+	// 当前角色是否还需要这个动作，当前term是否还需要处理这个回复, 回复的 term 是否与发起的 term 一致
+	if rf.state != Candidate || rf.currentTerm != replys.Term || replys.Term != args.Term {
+		return
+	}
+	if replys.VoteGranted {
+		*voteCount++
+		DPrintf("%d 在term %d 收到了 %d 的投票, 现在总共票数 %d", rf.me, rf.currentTerm, serverId, voteCount)
+		if *voteCount > len(rf.peers)/2 {
+			rf.toLeader()
+		}
+	}
+
+}
+func (rf *Raft) heartsbeat() {
+	for rf.killed() == false {
+		rf.mu.Lock()
+		if rf.state != Leader {
+			rf.mu.Unlock()
+			return
+		}
+		DPrintf("%d 在term %d 开始发送心跳", rf.me, rf.currentTerm)
+
+		rf.mu.Unlock()
+		for i := range rf.peers {
+			if i == rf.me {
+				continue
+			}
+			go rf.sendAppendEntriesToPeer(i)
+		}
+		time.Sleep(heartsbeatsMs * time.Millisecond)
+	}
+}
+
+func (rf *Raft) sendAppendEntriesToPeer(serverid int) {
+	rf.mu.Lock()
+	args := &AppendEntriesArgs{
+		Term:     rf.currentTerm,
+		LeaderId: rf.me,
+	}
+	reply := &AppendEntriesReply{}
+	if rf.state != Leader {
+		rf.mu.Unlock()
+		return
+	}
+	rf.mu.Unlock()
+
+	if ok := rf.sendAppendEntries(serverid, args, reply); !ok {
+		// DPrintf("%d 在term %d 发送给 %d 心跳RPC失败", rf.me, rf.currentTerm, i)
+		return
+	}
+
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	DPrintf("%d 在 term %d 收到 %d 的AppendEntries reply %+v", rf.me, rf.currentTerm, serverid, reply)
+	if reply.Term > rf.currentTerm {
+		rf.currentTerm = reply.Term
+		rf.votedFor = -1 // 重置选票
+		rf.toFollower()
+		return
+	}
+	if rf.state != Leader || rf.currentTerm != reply.Term || args.Term != reply.Term {
+		return
+	}
+}
+
+// 需要在加锁状态下使用
+func (rf *Raft) resetElectionTime() {
+	electionTime := time.Duration((electionTimeMinMs + rand.Intn(electionTimeMaxMs-electionTimeMinMs))) * time.Millisecond
+	time := time.Now()
+	rf.electionTime = time.Add(electionTime)
+}
+
 // The ticker go routine starts a new election if this peer hasn't received
 // heartsbeats recently.
 func (rf *Raft) ticker() {
@@ -318,7 +499,15 @@ func (rf *Raft) ticker() {
 		// be started and to randomize sleeping time using
 		// time.Sleep().
 		// TODO:2A
-
+		rf.mu.Lock()
+		if rf.state != Leader && time.Now().After(rf.electionTime) {
+			// 开启选举
+			rf.mu.Unlock()
+			rf.election()
+		} else {
+			rf.mu.Unlock()
+		}
+		time.Sleep(5 * time.Millisecond)
 	}
 }
 
@@ -341,7 +530,10 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 
 	// Your initialization code here (2A, 2B, 2C).
-	rflogInit()
+	rf.currentTerm = 0
+	rf.votedFor = -1
+	rf.toFollower()
+	rf.resetElectionTime()
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
