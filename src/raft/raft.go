@@ -80,18 +80,27 @@ type Raft struct {
 	// state a Raft server must maintain.
 
 	// Persistent state on all servers
-	currentTerm int // 此节点的任期
-	votedFor    int // 此节点投票给了谁
+	currentTerm int   // 此节点的任期
+	votedFor    int   // 此节点投票给了谁
+	log         []Log // 日志条目， first index is 1, 每条 Entry 包含一条待施加至状态机的命令
 
+	// Volatile state on all servers:
+	commitIndex int // 已经提交了的最高日志id, 初始化为0，自动增长(当Leader成功在大部分server上复制了一条Entry那么这条日志就是已提交)
+	lastApplied int // 已经应用给上层状态机的最高日志id, 初始化为0，自动增长
+
+	// Volatile state on learders:意味着只能leader有且leader才有意义，也就是在成为leader时要重新初始化
+	// 在一次次心跳中，nextIndex 不断减小，matchIndex 不断增大，直至 matchIndex = nextIndex - 1，则代表该 Follower 已经与 Leader 成功同步。
+	nextIndex  []int // 需要同步给peer[i]的下一个日志条目entry的index，初始化为last log index + 1
+	matchIndex []int // 代表Leader已知的已在peer[i]上成功复制的最高entry index, 初始化为0（帮助Leader更新commitIndex）
 	//pivate:
 	electionTime time.Time
 	state        RaftState
 }
 
 type Log struct {
-	index   int         // 该记录在日志中的位置
-	term    int         // 该记录首次被创建时的任期号
-	command interface{} // 命令
+	Index   int         // 该记录在日志中的位置
+	Term    int         // 该记录首次被创建时的任期号
+	Command interface{} // 命令
 }
 
 // return currentTerm and whether this server
@@ -172,8 +181,10 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 //
 type RequestVoteArgs struct {
 	// Your data here (2A, 2B).
-	Term        int // Candidate的任期
-	CandidateId int // candidate请求投票
+	Term         int // Candidate的任期
+	CandidateId  int // Candidate请求投票
+	LastLogIndex int // Candidate的最后log的index
+	LastLogTerm  int // Candidate的最后log的term
 }
 
 //
@@ -184,6 +195,7 @@ type RequestVoteReply struct {
 	// Your data here (2A).
 	Term        int  // 此节点的任期。假如 Candidate 发现 Follower 的任期高于自己，则会放弃 Candidate 身份并更新自己的任期。
 	VoteGranted bool // 是否同意candidated当选，true表示同意
+
 }
 
 //
@@ -220,10 +232,14 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	}
 }
 
-// 在领导选举的过程中，AppendEntries RPC 用来实现 Leader 的心跳机制。节点的 AppendEntries RPC 会被 Leader 定期调用。
+// 心跳和同步日志
 type AppendEntriesArgs struct {
-	Term     int // Leader 的任期
-	LeaderId int // Client 可能将请求发送至 Follower 节点，得知 leaderId 后 Follower 可将 Client 的请求重定位至 Leader 节点
+	Term         int   // Leader 的任期
+	LeaderId     int   // Client 可能将请求发送至 Follower 节点，得知 leaderId 后 Follower 可将 Client 的请求重定位至 Leader 节点
+	PrevLogIndex int   // 添加日志Entries的前一条Entry的index
+	PrevLogTerm  int   // prevLogIndex对应entry的term
+	Entries      []Log //需要同步的entries。若为空，则是heartbeat
+	LeaderCommit int   // Leader的commitIndex，帮助Follower更新自身的commitIndex
 }
 
 type AppendEntriesReply struct {
@@ -231,6 +247,7 @@ type AppendEntriesReply struct {
 	Success bool // 此节点是否认同 Leader 发送的心跳。
 }
 
+// 心跳和日志条目
 func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
@@ -306,14 +323,23 @@ func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *Ap
 // if it's ever committed. the second return value is the current
 // term. the third return value is true if this server believes it is
 // the leader.
-//
+// 第一个返回值是index, 第二个是current term, 第三个是否是Leader
 func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	index := -1
 	term := -1
 	isLeader := true
 
 	// Your code here (2B).
-
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	if rf.state != Leader {
+		isLeader = false
+		return index, term, isLeader
+	}
+	index = rf.getLastLogIndex()
+	term = rf.currentTerm
+	log := Log{Index: index, Term: term, Command: command}
+	rf.log = append(rf.log, log)
 	return index, term, isLeader
 }
 
@@ -332,6 +358,15 @@ func (rf *Raft) Kill() {
 	atomic.StoreInt32(&rf.dead, 1)
 	// Your code here, if desired.
 }
+
+// 日志工具类
+func (rf *Raft) getLastLogIndex() int {
+	return len(rf.log)
+}
+
+// getLog
+
+// subLog 包括: start 和 end, 深拷贝，不然极限情况下会有 race 的 bug
 
 func (rf *Raft) killed() bool {
 	z := atomic.LoadInt32(&rf.dead)
