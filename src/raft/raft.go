@@ -60,9 +60,7 @@ const (
 )
 
 const (
-	heartsbeatsMs     = 100
-	electionTimeMinMs = 250
-	electionTimeMaxMs = 400
+	heartsbeatsMs = 100
 )
 
 //
@@ -230,7 +228,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		DPrintf("%d 在 term %d 给 %d 投票, lastLogIndex : %d , lastLogTerm(-1表示日志还是空的) : % d", rf.me, rf.currentTerm, args.CandidateId, lastLogIndex, lastLogTerm)
 		reply.VoteGranted = true
 		rf.votedFor = args.CandidateId
-		// 给其它节点投票了也要重置超时时间
+		// 给其它节点投票了才要重置超时时间，没投票不能重置超时时间
 		rf.resetElectionTimeL()
 	}
 }
@@ -284,12 +282,12 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		if entry.Index <= rf.getLastLogIndex() && rf.getLog(entry.Index).Term != entry.Term {
 			// 这里entry.Index一定要记住减1, 因为是entry.Index这个日志冲突了, 所以这个entry.Index的日志以后（包括这个日志）要删掉，排查了好久。
 			rf.log = rf.subLog(-1, entry.Index-1)
-			DPrintf("%d 在 term %d 收到了日志冲突, 删除, 当前日志为: %+v", rf.me, rf.currentTerm, rf.log)
+			// DPrintf("%d 在 term %d 收到了日志冲突, 删除, 当前日志为: %+v", rf.me, rf.currentTerm, rf.log)
 		}
 		// 4.添加不存在的新的日志,Append any new entries not already in the log
 		if entry.Index > rf.getLastLogIndex() {
 			rf.log = append(rf.log, args.Entries[i:]...)
-			DPrintf("%d 在 term %d 收到日志追加, %+v .", rf.me, rf.currentTerm, rf.log)
+			// DPrintf("%d 在 term %d 收到日志追加, %+v .", rf.me, rf.currentTerm, rf.log)
 			break
 		}
 	}
@@ -423,12 +421,11 @@ func (rf *Raft) toFollowerL(term int) {
 	DPrintf("%d 在term %d 变成了Follower", rf.me, rf.currentTerm)
 }
 
-// 成为候选人，任期+1，投自己一票，重置选举时间
+// 成为候选人，任期+1，投自己一票
 func (rf *Raft) toCandidateL() {
 	rf.currentTerm++
 	rf.votedFor = rf.me
 	rf.state = Candidate
-	rf.resetElectionTimeL()
 	DPrintf("%d 在term %d 变成了Candidate并发起选举", rf.me, rf.currentTerm)
 }
 
@@ -511,7 +508,7 @@ func (rf *Raft) requestVote(serverId int, args *RequestVoteArgs, voteCount *int)
 		}
 		// double check，因为有可能发起新一轮选举了，才收到这个消息
 		// 是否还在同一个时期
-		if replys.Term != args.Term {
+		if rf.state != Candidate || replys.Term != args.Term {
 			return
 		}
 		if replys.VoteGranted {
@@ -549,6 +546,9 @@ func (rf *Raft) sendAppendEntriesToPeerL(serverid int) {
 		if ok {
 			rf.mu.Lock()
 			defer rf.mu.Unlock()
+			if rf.state != Leader {
+				return
+			}
 			rf.processAppendReplyL(serverid, args, reply)
 		}
 	}()
@@ -580,9 +580,9 @@ func (rf *Raft) processAppendReplyL(serverid int, args *AppendEntriesArgs, reply
 }
 
 func (rf *Raft) resetElectionTimeL() {
-	electionTime := time.Duration((electionTimeMinMs + rand.Intn(electionTimeMaxMs-electionTimeMinMs))) * time.Millisecond
-	time := time.Now()
-	rf.electionTime = time.Add(electionTime)
+	t := time.Now()
+	electionTimeout := time.Duration((150 + rand.Intn(150))) * time.Millisecond
+	rf.electionTime = t.Add(electionTimeout)
 }
 
 // The ticker go routine starts a new election if this peer hasn't received
@@ -593,7 +593,6 @@ func (rf *Raft) ticker() {
 		// be started and to randomize sleeping time using
 		// time.Sleep().
 		rf.tick()
-		// time.Sleep(time.Duration(50) * time.Millisecond)
 		time.Sleep(heartsbeatsMs * time.Millisecond)
 	}
 }
@@ -653,7 +652,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.peers = peers
 	rf.persister = persister
 	rf.me = me
-
+	DPrintf("服务器开始运行")
 	rf.applyCh = applyCh
 	rf.applyCond = sync.NewCond(&rf.mu)
 
