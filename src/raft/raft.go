@@ -78,9 +78,9 @@ type Raft struct {
 	// state a Raft server must maintain.
 
 	// Persistent state on all servers
-	currentTerm int        // 此节点的任期
-	votedFor    int        // 此节点投票给了谁
-	log         []LogEntry // 日志条目， first index is 1, 每条 Entry 包含一条待施加至状态机的命令
+	currentTerm int // 此节点的任期
+	votedFor    int // 此节点投票给了谁
+	log         Log // 日志条目， first index is 1, 每条 Entry 包含一条待施加至状态机的命令
 
 	// Volatile state on all servers:
 	commitIndex int // 已经提交了的最高日志id, 初始化为0，自动增长(当Leader成功在大部分server上复制了一条Entry那么这条日志就是已提交)
@@ -97,11 +97,12 @@ type Raft struct {
 	applyCond    *sync.Cond
 }
 
+/*
 type LogEntry struct {
 	Index   int         // 该记录在日志中的位置
 	Term    int         // 该记录首次被创建时的任期号
 	Command interface{} // 命令
-}
+}*/
 
 // return currentTerm and whether this server
 // believes it is the leader.
@@ -219,8 +220,8 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	// 到这里一定有rf.currentTerm == args.term了, 所以必然会有args.term == reply.term了，后面double check才要检查
 	reply.Term = rf.currentTerm
 	if rf.votedFor == -1 || rf.votedFor == args.CandidateId {
-		lastLogIndex := rf.getLastLogIndex()
-		lastLogTerm := rf.getLog(lastLogIndex).Term
+		lastLogIndex := rf.log.lastindex()
+		lastLogTerm := rf.log.entry(lastLogIndex).Term
 		if lastLogTerm > args.LastLogTerm || (lastLogTerm == args.LastLogTerm && lastLogIndex > args.LastLogIndex) {
 			reply.VoteGranted = false
 			return
@@ -235,12 +236,12 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 
 // 心跳和同步日志
 type AppendEntriesArgs struct {
-	Term         int        // Leader 的任期
-	LeaderId     int        // Client 可能将请求发送至 Follower 节点，得知 leaderId 后 Follower 可将 Client 的请求重定位至 Leader 节点
-	PrevLogIndex int        // 添加日志Entries的前一条Entry的index
-	PrevLogTerm  int        // prevLogIndex对应entry的term
-	Entries      []LogEntry //需要同步的entries。若为空，则是heartbeat
-	LeaderCommit int        // Leader的commitIndex，帮助Follower更新自身的commitIndex
+	Term         int     // Leader 的任期
+	LeaderId     int     // Client 可能将请求发送至 Follower 节点，得知 leaderId 后 Follower 可将 Client 的请求重定位至 Leader 节点
+	PrevLogIndex int     // 添加日志Entries的前一条Entry的index
+	PrevLogTerm  int     // prevLogIndex对应entry的term
+	Entries      []Entry //需要同步的entries。若为空，则是heartbeat
+	LeaderCommit int     // Leader的commitIndex，帮助Follower更新自身的commitIndex
 }
 
 type AppendEntriesReply struct {
@@ -269,8 +270,13 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	reply.Term = rf.currentTerm
 
 	// 2.日志不匹配需要leader的日志回退(5.3) (如果自己的log数量比prevLogIndex少直接就是不匹配了可以返回false)
-	if rf.getLastLogIndex() < args.PrevLogIndex || rf.getLog(args.PrevLogIndex).Term != args.PrevLogTerm {
-		DPrintf("%d 在 term %d 收到来自 %d 的日志不匹配", rf.me, rf.currentTerm, args.LeaderId)
+	if rf.log.lastindex() < args.PrevLogIndex {
+		DPrintf("%d 在 term %d 收到来自 %d 的日志不匹配1, rf.log: %+v", rf.me, rf.currentTerm, args.LeaderId, rf.log)
+		reply.Success = false
+		return
+	}
+	if rf.log.entry(args.PrevLogIndex).Term != args.PrevLogTerm {
+		DPrintf("%d 在 term %d 收到来自 %d 的日志不匹配2, rf.log: %+v", rf.me, rf.currentTerm, args.LeaderId, rf.log)
 		reply.Success = false
 		return
 	}
@@ -278,22 +284,22 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	DPrintf("%d 在 term %d 收到来自 %d 的AppendEntries, PrevLogIndex: %d , PrevLogTerm: %d ", rf.me, rf.currentTerm, args.LeaderId, args.PrevLogIndex, args.PrevLogTerm)
 
 	for i, entry := range args.Entries {
+		index := args.PrevLogIndex + i + 1
 		// 3.日志冲突, 删除
-		if entry.Index <= rf.getLastLogIndex() && rf.getLog(entry.Index).Term != entry.Term {
-			// 这里entry.Index一定要记住减1, 因为是entry.Index这个日志冲突了, 所以这个entry.Index的日志以后（包括这个日志）要删掉，排查了好久。
-			rf.log = rf.subLog(-1, entry.Index-1)
+		if index <= rf.log.lastindex() && rf.log.entry(index).Term != entry.Term {
+			rf.log.cutend(index)
 			// DPrintf("%d 在 term %d 收到了日志冲突, 删除, 当前日志为: %+v", rf.me, rf.currentTerm, rf.log)
 		}
 		// 4.添加不存在的新的日志,Append any new entries not already in the log
-		if entry.Index > rf.getLastLogIndex() {
-			rf.log = append(rf.log, args.Entries[i:]...)
+		if index > rf.log.lastindex() {
+			rf.log.append(args.Entries[i:]...)
 			// DPrintf("%d 在 term %d 收到日志追加, %+v .", rf.me, rf.currentTerm, rf.log)
 			break
 		}
 	}
 
 	if args.LeaderCommit > rf.commitIndex {
-		rf.commitIndex = min(args.LeaderCommit, rf.getLastLogIndex())
+		rf.commitIndex = min(args.LeaderCommit, rf.log.lastindex())
 		rf.apply()
 	}
 }
@@ -358,10 +364,9 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	if rf.state != Leader {
 		return -1, rf.currentTerm, false
 	}
-	index := rf.getLastLogIndex() + 1
+	index := rf.log.lastindex() + 1
 	term := rf.currentTerm
-	log := LogEntry{Index: index, Term: term, Command: command}
-	rf.log = append(rf.log, log)
+	rf.log.append(Entry{Term: term, Command: command})
 	DPrintf("%d 在 term %d 写入了日志, LogIndex : %d , LogTerm : %d, Command: %v", rf.me, rf.currentTerm, index, term, command)
 	rf.sendAppendEntriesToAllPeerL()
 	return index, term, true
@@ -384,7 +389,7 @@ func (rf *Raft) Kill() {
 }
 
 // 日志工具类
-func (rf *Raft) getLastLogIndex() int {
+/*func (rf *Raft) getLastLogIndex() int {
 	return len(rf.log)
 }
 
@@ -407,7 +412,7 @@ func (rf *Raft) subLog(start int, end int) []LogEntry {
 	} else {
 		return append([]LogEntry{}, rf.log[start-1:end]...)
 	}
-}
+}*/
 func (rf *Raft) killed() bool {
 	z := atomic.LoadInt32(&rf.dead)
 	return z == 1
@@ -436,7 +441,7 @@ func (rf *Raft) toLeaderL() {
 	n := len(rf.peers)
 	rf.nextIndex = make([]int, n)
 	rf.matchIndex = make([]int, n)
-	lastLogIndex := rf.getLastLogIndex()
+	lastLogIndex := rf.log.lastindex()
 	for i := 0; i < n; i++ {
 		rf.nextIndex[i] = lastLogIndex + 1
 	}
@@ -454,8 +459,8 @@ func (rf *Raft) leaderCommit() {
 			rf.mu.Unlock()
 			return
 		}
-		for n := rf.commitIndex + 1; n <= rf.getLastLogIndex(); n++ {
-			if rf.getLog(n).Term != rf.currentTerm {
+		for n := rf.commitIndex + 1; n <= rf.log.lastindex(); n++ {
+			if rf.log.entry(n).Term != rf.currentTerm {
 				continue
 			}
 			matchIndexCount := 1
@@ -479,12 +484,12 @@ func (rf *Raft) electionL() {
 	// 成为Ccandidate
 	rf.toCandidateL()
 	// 请求选票的RequestVoteArgs都要相同
-	lastLogIndex := rf.getLastLogIndex()
+	lastLogIndex := rf.log.lastindex()
 	args := &RequestVoteArgs{
 		Term:         rf.currentTerm,
 		CandidateId:  rf.me,
 		LastLogIndex: lastLogIndex,
-		LastLogTerm:  rf.getLog(lastLogIndex).Term,
+		LastLogTerm:  rf.log.entry(lastLogIndex).Term,
 	}
 	voteCount := 1
 	// DPrintf("%d 在term %d 开始发起选举", rf.me, rf.currentTerm)
@@ -531,15 +536,17 @@ func (rf *Raft) sendAppendEntriesToAllPeerL() {
 	}
 }
 func (rf *Raft) sendAppendEntriesToPeerL(serverid int) {
+	next := rf.nextIndex[serverid]
 	args := &AppendEntriesArgs{
 		Term:         rf.currentTerm,
 		LeaderId:     rf.me,
-		PrevLogIndex: rf.nextIndex[serverid] - 1,
-		PrevLogTerm:  rf.getLog(rf.nextIndex[serverid] - 1).Term,
-		Entries:      rf.subLog(rf.nextIndex[serverid], -1),
+		PrevLogIndex: next - 1,
+		PrevLogTerm:  rf.log.entry(next - 1).Term,
+		Entries:      make([]Entry, rf.log.lastindex()-next+1),
 		LeaderCommit: rf.commitIndex,
 	}
-	DPrintf("%d 在term %d 给 %d 发送AppendEntries, rf.nextIndex[serverid]: %d, args.PrevLogIndex %d, args.PrevLogTerm %d", rf.me, rf.currentTerm, serverid, rf.nextIndex[serverid], args.PrevLogIndex, args.PrevLogTerm)
+	copy(args.Entries, rf.log.slice(next))
+	DPrintf("%d 在term %d 给 %d 发送AppendEntries, rf.nextIndex[%d]: %d, args.PrevLogIndex %d, args.PrevLogTerm %d", rf.me, rf.currentTerm, serverid, serverid, rf.nextIndex[serverid], args.PrevLogIndex, args.PrevLogTerm)
 	go func() {
 		reply := &AppendEntriesReply{}
 		ok := rf.sendAppendEntries(serverid, args, reply)
@@ -622,7 +629,8 @@ func (rf *Raft) applier() {
 			applyMsg := ApplyMsg{
 				CommandValid: true,
 				CommandIndex: rf.lastApplied,
-				Command:      rf.getLog(rf.lastApplied).Command,
+				// Command:      rf.getLog(rf.lastApplied).Command,
+				Command: rf.log.entry(rf.lastApplied).Command,
 			}
 			rf.mu.Unlock()
 			// 不要在锁的状态下用channel
@@ -663,6 +671,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.resetElectionTimeL()
 	rf.lastApplied = 0
 	rf.commitIndex = 0
+	rf.log = mkLogEmpty()
+	rf.log.append(Entry{0, -1})
 	rf.nextIndex = make([]int, len(rf.peers))
 	rf.matchIndex = make([]int, len(rf.peers))
 
