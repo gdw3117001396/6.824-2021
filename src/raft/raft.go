@@ -600,15 +600,18 @@ func (rf *Raft) processAppendReplyL(serverid int, args *AppendEntriesArgs, reply
 		DPrintf("%d 在 term %d 更新了nextInde[%d]: %d , 更新了matchIndex[%d]: %d .", rf.me, rf.currentTerm, serverid, rf.nextIndex[serverid], serverid, rf.matchIndex[serverid])
 	} else if reply.Conflict {
 		if reply.XTerm == -1 {
+			//Follower 的日志太久没追上，nextIndex = XLen
 			rf.nextIndex[serverid] = reply.XLen
 			DPrintf("%d 在 term %d 拒绝了 %d 的日志传送，日志条目太少, nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
 		} else {
 			lastLogInXTermIndex := rf.findLastLogInTerm(reply.XTerm)
 			if lastLogInXTermIndex == -1 {
+				// Leader 中没有 XTerm，nextIndex = XIndex
 				rf.nextIndex[serverid] = reply.XIndex
 				DPrintf("%d 在 term %d 拒绝了 %d 的日志传送, 没有Xterm, nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
 			} else {
-				rf.nextIndex[serverid] = lastLogInXTermIndex + 1
+				// Leader 有 XTerm，nextIndex = leader's last entry for XTerm
+				rf.nextIndex[serverid] = lastLogInXTermIndex
 				DPrintf("%d 在 term %d 拒绝了 %d 的日志传送,有Xterm,nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
 			}
 		}
