@@ -20,12 +20,15 @@ package raft
 import (
 	//	"bytes"
 
+	"bytes"
 	"math/rand"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	//	"6.824/labgob"
+	"6.824/labgob"
 	"6.824/labrpc"
 )
 
@@ -132,6 +135,14 @@ func (rf *Raft) persist() {
 	// e.Encode(rf.yyy)
 	// data := w.Bytes()
 	// rf.persister.SaveRaftState(data)
+	w := new(bytes.Buffer)
+	e := labgob.NewEncoder(w)
+	if e.Encode(rf.currentTerm) != nil || e.Encode(rf.votedFor) != nil || e.Encode(rf.log) != nil {
+		DPrintf("持久化状态失败")
+		os.Exit(1)
+	}
+	data := w.Bytes()
+	rf.persister.SaveRaftState(data)
 }
 
 //
@@ -154,6 +165,20 @@ func (rf *Raft) readPersist(data []byte) {
 	//   rf.xxx = xxx
 	//   rf.yyy = yyy
 	// }
+	r := bytes.NewBuffer(data)
+	d := labgob.NewDecoder(r)
+	var currentTerm int
+	var votedFor int
+	var log Log
+	if d.Decode(&currentTerm) != nil || d.Decode(&votedFor) != nil || d.Decode(&log) != nil {
+		DPrintf("readPersist erro")
+		os.Exit(1)
+	} else {
+		rf.currentTerm = currentTerm
+		rf.votedFor = votedFor
+		rf.log = log
+		DPrintf("%d 从 disk 恢复数据:currentTerm=%d,voteFor=%d,logs=%+v", rf.me, rf.currentTerm, rf.votedFor, rf.log)
+	}
 }
 
 //
@@ -230,6 +255,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		reply.VoteGranted = true
 		rf.votedFor = args.CandidateId
 		// 给其它节点投票了才要重置超时时间，没投票不能重置超时时间
+		rf.persist()
 		rf.resetElectionTimeL()
 	}
 }
@@ -306,11 +332,13 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		// 3.日志冲突, 删除
 		if index <= rf.log.lastindex() && rf.log.entry(index).Term != entry.Term {
 			rf.log.cutend(index)
+			rf.persist()
 			// DPrintf("%d 在 term %d 收到了日志冲突, 删除, 当前日志为: %+v", rf.me, rf.currentTerm, rf.log)
 		}
 		// 4.添加不存在的新的日志,Append any new entries not already in the log
 		if index > rf.log.lastindex() {
 			rf.log.append(args.Entries[i:]...)
+			rf.persist()
 			// DPrintf("%d 在 term %d 收到日志追加, %+v .", rf.me, rf.currentTerm, rf.log)
 			break
 		}
@@ -385,8 +413,11 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	index := rf.log.lastindex() + 1
 	term := rf.currentTerm
 	rf.log.append(Entry{Term: term, Command: command})
+	rf.persist()
 	DPrintf("%d 在 term %d 写入了日志, LogIndex : %d , LogTerm : %d, Command: %v", rf.me, rf.currentTerm, index, term, command)
 	rf.sendAppendEntriesToAllPeerL()
+	// 这里可能也要重置超时时间的
+	rf.resetElectionTimeL()
 	return index, term, true
 }
 
@@ -441,6 +472,7 @@ func (rf *Raft) toFollowerL(term int) {
 	rf.state = Follower
 	rf.currentTerm = term
 	rf.votedFor = -1
+	rf.persist()
 	DPrintf("%d 在term %d 变成了Follower", rf.me, rf.currentTerm)
 }
 
@@ -449,6 +481,7 @@ func (rf *Raft) toCandidateL() {
 	rf.currentTerm++
 	rf.votedFor = rf.me
 	rf.state = Candidate
+	rf.persist()
 	DPrintf("%d 在term %d 变成了Candidate并发起选举", rf.me, rf.currentTerm)
 }
 
@@ -531,7 +564,7 @@ func (rf *Raft) requestVote(serverId int, args *RequestVoteArgs, voteCount *int)
 		}
 		// double check，因为有可能发起新一轮选举了，才收到这个消息
 		// 是否还在同一个时期
-		if rf.state != Candidate || replys.Term != args.Term {
+		if rf.state != Candidate || rf.currentTerm != args.Term {
 			return
 		}
 		if replys.VoteGranted {
@@ -585,7 +618,7 @@ func (rf *Raft) processAppendReplyL(serverid int, args *AppendEntriesArgs, reply
 		return
 	}
 	// 看看是否还是同一个时期
-	if args.Term != reply.Term {
+	if args.Term != rf.currentTerm {
 		return
 	}
 	if reply.Success {
