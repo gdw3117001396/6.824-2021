@@ -245,8 +245,12 @@ type AppendEntriesArgs struct {
 }
 
 type AppendEntriesReply struct {
-	Term    int  //此节点的任期,假如 Leader 发现 Follower 的任期高于自己，则会放弃 Leader 身份并更新自己的任期。
-	Success bool // 此节点是否认同 Leader 发送的心跳。
+	Term     int  //此节点的任期,假如 Leader 发现 Follower 的任期高于自己，则会放弃 Leader 身份并更新自己的任期。
+	Success  bool // 此节点是否认同 Leader 发送的心跳。
+	Conflict bool
+	XTerm    int // 冲突 entry 的任期
+	XIndex   int // XTerm 的第一条 entry 的 index
+	XLen     int // 自己log本身的长度
 }
 
 // 心跳和日志条目
@@ -273,11 +277,25 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	if rf.log.lastindex() < args.PrevLogIndex {
 		DPrintf("%d 在 term %d 收到来自 %d 的日志不匹配1, rf.log: %+v", rf.me, rf.currentTerm, args.LeaderId, rf.log)
 		reply.Success = false
+		reply.Conflict = true
+		reply.XTerm = -1
+		reply.XIndex = -1
+		reply.XLen = rf.log.len()
 		return
 	}
 	if rf.log.entry(args.PrevLogIndex).Term != args.PrevLogTerm {
 		DPrintf("%d 在 term %d 收到来自 %d 的日志不匹配2, rf.log: %+v", rf.me, rf.currentTerm, args.LeaderId, rf.log)
 		reply.Success = false
+		reply.Conflict = true
+		xTerm := rf.log.entry(args.PrevLogIndex).Term
+		for xIndex := args.PrevLogIndex; xIndex > 0; xIndex-- {
+			if rf.log.entry(xIndex-1).Term != xTerm {
+				reply.XIndex = xIndex
+				break
+			}
+		}
+		reply.XTerm = xTerm
+		reply.XLen = rf.log.len()
 		return
 	}
 	reply.Success = true
@@ -580,12 +598,36 @@ func (rf *Raft) processAppendReplyL(serverid int, args *AppendEntriesArgs, reply
 			rf.matchIndex[serverid] = newMatch
 		}
 		DPrintf("%d 在 term %d 更新了nextInde[%d]: %d , 更新了matchIndex[%d]: %d .", rf.me, rf.currentTerm, serverid, rf.nextIndex[serverid], serverid, rf.matchIndex[serverid])
+	} else if reply.Conflict {
+		if reply.XTerm == -1 {
+			rf.nextIndex[serverid] = reply.XLen
+			DPrintf("%d 在 term %d 拒绝了 %d 的日志传送，日志条目太少, nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
+		} else {
+			lastLogInXTermIndex := rf.findLastLogInTerm(reply.XTerm)
+			if lastLogInXTermIndex == -1 {
+				rf.nextIndex[serverid] = reply.XIndex
+				DPrintf("%d 在 term %d 拒绝了 %d 的日志传送, 没有Xterm, nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
+			} else {
+				rf.nextIndex[serverid] = lastLogInXTermIndex
+				DPrintf("%d 在 term %d 拒绝了 %d 的日志传送,有Xterm,nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
+			}
+		}
 	} else {
 		rf.nextIndex[serverid] = args.PrevLogIndex
-		DPrintf("%d 在 term %d 拒绝了日志传送, nextIndex[%d]: %d .", rf.me, rf.currentTerm, serverid, rf.nextIndex[serverid])
+		DPrintf("%d 在 term %d 拒绝了 %d 的日志传送, nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
 	}
 }
-
+func (rf *Raft) findLastLogInTerm(x int) int {
+	for i := rf.log.lastindex(); i > 0; i-- {
+		term := rf.log.entry(i).Term
+		if term == x {
+			return i
+		} else if term < x {
+			break
+		}
+	}
+	return -1
+}
 func (rf *Raft) resetElectionTimeL() {
 	t := time.Now()
 	electionTimeout := time.Duration((150 + rand.Intn(150))) * time.Millisecond
