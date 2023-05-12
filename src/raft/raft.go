@@ -608,7 +608,7 @@ func (rf *Raft) processAppendReplyL(serverid int, args *AppendEntriesArgs, reply
 				rf.nextIndex[serverid] = reply.XIndex
 				DPrintf("%d 在 term %d 拒绝了 %d 的日志传送, 没有Xterm, nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
 			} else {
-				rf.nextIndex[serverid] = lastLogInXTermIndex
+				rf.nextIndex[serverid] = lastLogInXTermIndex + 1
 				DPrintf("%d 在 term %d 拒绝了 %d 的日志传送,有Xterm,nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
 			}
 		}
