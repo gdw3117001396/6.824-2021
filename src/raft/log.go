@@ -11,7 +11,7 @@ type Log struct {
 }
 
 func mkLogEmpty() Log {
-	return Log{make([]Entry, 0), 0}
+	return Log{make([]Entry, 1), 0}
 }
 
 func mkLog(log []Entry, index0 int) Log {
