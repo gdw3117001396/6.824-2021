@@ -181,6 +181,28 @@ func (rf *Raft) readPersist(data []byte) {
 	}
 }
 
+type InstallSnapshotargs struct {
+	Term              int    // leader的任期
+	LeaderId          int    // leader的ID，这样follower才能重定向客户端的请求
+	LastIncludedIndex int    // 最后一个被快照取代的日志条目的索引
+	LastIncludedTerm  int    // LastIncludedIndex所处的任期号
+	Offset            int    // 数据块在快照文件中位置的字节偏移量
+	Data              []byte // 从偏移量offset开始快照块的原始字节数据
+	Done              bool   // 是否是最后一个快照
+}
+type InstallSnapshotreplys struct {
+	Term int // 当前的任期，供Leader自我更新
+}
+
+// 当一个follower接收并处理一个InstallSnapshotRPC时，它必须使用Raft将快照交给服务。
+func (rf *Raft) InstallSnapshot(args *InstallSnapshotargs, reply *InstallSnapshotreplys) {
+	if args.Term < rf.currentTerm {
+		reply.Term = rf.currentTerm
+		return
+	}
+	rf.apply()
+}
+
 //
 // A service wants to switch to snapshot.  Only do so if Raft hasn't
 // have more recent info since it communicate the snapshot on applyCh.
@@ -198,7 +220,11 @@ func (rf *Raft) CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int,
 // that index. Raft should now trim its log as much as possible.
 func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	// Your code here (2D).
-
+	rf.log.cutstart(index + 1)
+	if rf.commitIndex < index {
+		rf.commitIndex = index
+		rf.lastApplied = index
+	}
 }
 
 //
@@ -389,6 +415,11 @@ func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *Ap
 	return ok
 }
 
+func (rf *Raft) sendInstallSnapshot(server int, args *InstallSnapshotargs, reply *InstallSnapshotreplys) bool {
+	ok := rf.peers[server].Call("Raft.InstallSnapshot", args, reply)
+	return ok
+}
+
 //
 // the service using Raft (e.g. a k/v server) wants to start
 // agreement on the next command to be appended to Raft's log. if this
@@ -416,8 +447,6 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.persist()
 	DPrintf("%d 在 term %d 写入了日志, LogIndex : %d , LogTerm : %d, Command: %v", rf.me, rf.currentTerm, index, term, command)
 	rf.sendAppendEntriesToAllPeerL()
-	// 这里可能也要重置超时时间的
-	rf.resetElectionTimeL()
 	return index, term, true
 }
 
@@ -482,6 +511,7 @@ func (rf *Raft) toCandidateL() {
 	rf.votedFor = rf.me
 	rf.state = Candidate
 	rf.persist()
+	rf.resetElectionTimeL()
 	DPrintf("%d 在term %d 变成了Candidate并发起选举", rf.me, rf.currentTerm)
 }
 
@@ -581,9 +611,12 @@ func (rf *Raft) requestVote(serverId int, args *RequestVoteArgs, voteCount *int)
 func (rf *Raft) sendAppendEntriesToAllPeerL() {
 	DPrintf("%d 在term %d 开始发送AppendEntries, nextIndex: %+v", rf.me, rf.currentTerm, rf.nextIndex)
 	for i := range rf.peers {
-		if i != rf.me {
-			rf.sendAppendEntriesToPeerL(i)
+		if i == rf.me {
+			// 这里是重置自己的Leader自己的超时时间，很关键
+			rf.resetElectionTimeL()
+			continue
 		}
+		rf.sendAppendEntriesToPeerL(i)
 	}
 }
 func (rf *Raft) sendAppendEntriesToPeerL(serverid int) {
@@ -664,6 +697,10 @@ func (rf *Raft) findLastLogInTerm(x int) int {
 	}
 	return -1
 }
+
+// Raft指南上说了重置超时时间只能在3个地方
+// 1. 收到心跳。 2.给别的节点投票，只有投了才可以重置。 3.重新开始一轮选举时要重置。
+// 指南没说，但是我觉得很重要也是我踩的一个大坑。4.最后是很容易忽略的就是Leader发送心跳的时候，自己的超时时间也要重置
 func (rf *Raft) resetElectionTimeL() {
 	t := time.Now()
 	electionTimeout := time.Duration((150 + rand.Intn(150))) * time.Millisecond
@@ -686,12 +723,10 @@ func (rf *Raft) tick() {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	if rf.state == Leader {
-		rf.resetElectionTimeL()
 		// 发送AppendEntries
 		rf.sendAppendEntriesToAllPeerL()
 	}
 	if time.Now().After(rf.electionTime) {
-		rf.resetElectionTimeL()
 		rf.electionL()
 	}
 }
@@ -746,7 +781,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.currentTerm = 0
 	rf.votedFor = -1
 	rf.state = Follower
-	rf.resetElectionTimeL()
 	rf.lastApplied = 0
 	rf.commitIndex = 0
 	rf.log = mkLogEmpty()
@@ -756,6 +790,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
+	rf.resetElectionTimeL()
 
 	// start ticker goroutine to start elections
 	go rf.ticker()
