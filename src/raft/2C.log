@@ -1,18 +1,18 @@
 Test (2C): basic persistence ...
-  ... Passed --   3.0  3   78   21329    6
+  ... Passed --   3.2  3   84   22335    6
 Test (2C): more persistence ...
-  ... Passed --  15.3  5 1036  222070   16
+  ... Passed --  15.8  5 1104  228708   16
 Test (2C): partitioned leader and one follower crash, leader restarts ...
-  ... Passed --   1.7  3   44   11102    4
+  ... Passed --   1.4  3   38    9931    4
 Test (2C): Figure 8 ...
-  ... Passed --  33.5  5 1468  325753   65
+  ... Passed --  32.8  5 1456  327486   69
 Test (2C): unreliable agreement ...
-  ... Passed --   1.9  5 1064  357328  246
+  ... Passed --   1.7  5 1048  354421  246
 Test (2C): Figure 8 (unreliable) ...
-  ... Passed --  40.0  5 11876 25073788  102
+  ... Passed --  41.5  5 10728 29052420  369
 Test (2C): churn ...
-  ... Passed --  16.2  5 4036 10179843  859
+  ... Passed --  16.5  5 3824 7980798  811
 Test (2C): unreliable churn ...
-  ... Passed --  16.2  5 2164 1294383  357
+  ... Passed --  16.6  5 3980 7048994  826
 PASS
-ok  	6.824/raft	127.760s
+ok  	6.824/raft	129.537s

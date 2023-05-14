@@ -178,12 +178,12 @@ func (rf *Raft) readPersist(data []byte) {
 }
 
 type InstallSnapshotargs struct {
-	Term              int // leader的任期
-	LeaderId          int // leader的ID，这样follower才能重定向客户端的请求
-	LastIncludedIndex int // 最后一个被快照取代的日志条目的索引
-	LastIncludedTerm  int // LastIncludedIndex所处的任期号
-	Offset            int // 数据块在快照文件中位置的字节偏移量
-	// Data              []byte // 从偏移量offset开始快照块的原始字节数据
+	Term              int    // leader的任期
+	LeaderId          int    // leader的ID，这样follower才能重定向客户端的请求
+	LastIncludedIndex int    // 最后一个被快照取代的日志条目的索引
+	LastIncludedTerm  int    // LastIncludedIndex所处的任期号
+	Snapshot          []byte // 从偏移量offset开始快照块的原始字节数据
+	// Offset            int // 数据块在快照文件中位置的字节偏移量
 	// Done              bool   // 是否是最后一个快照
 }
 type InstallSnapshotreplys struct {
@@ -192,9 +192,15 @@ type InstallSnapshotreplys struct {
 
 // 当一个follower接收并处理一个InstallSnapshotRPC时，它必须使用Raft将快照交给服务。
 func (rf *Raft) InstallSnapshot(args *InstallSnapshotargs, reply *InstallSnapshotreplys) {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
 	if args.Term < rf.currentTerm {
 		reply.Term = rf.currentTerm
 		return
+	}
+
+	if args.Term > rf.currentTerm {
+		rf.toFollowerL(args.Term)
 	}
 	rf.apply()
 }
@@ -216,11 +222,7 @@ func (rf *Raft) CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int,
 // that index. Raft should now trim its log as much as possible.
 func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	// Your code here (2D).
-	rf.log.cutstart(index + 1)
-	if rf.commitIndex < index {
-		rf.commitIndex = index
-		rf.lastApplied = index
-	}
+
 }
 
 //
@@ -613,6 +615,7 @@ func (rf *Raft) sendAppendEntriesToAllPeerL() {
 			continue
 		}
 		// 在这里开启快照
+
 		rf.sendAppendEntriesToPeerL(i)
 	}
 }
@@ -642,16 +645,16 @@ func (rf *Raft) sendAppendEntriesToPeerL(serverid int) {
 		if ok {
 			rf.mu.Lock()
 			defer rf.mu.Unlock()
-			if rf.state != Leader {
-				return
-			}
 			rf.processAppendReplyL(serverid, args, reply)
 		}
 	}()
 }
 func (rf *Raft) processAppendReplyL(serverid int, args *AppendEntriesArgs, reply *AppendEntriesReply) {
 	DPrintf("%d 在 term %d 收到 %d 的AppendEntries reply %+v", rf.me, rf.currentTerm, serverid, reply)
-
+	if reply.Term > rf.currentTerm {
+		rf.toFollowerL(reply.Term)
+		return
+	}
 	// 看看是否还是同一个时期
 	if args.Term != rf.currentTerm {
 		return
