@@ -54,7 +54,3 @@ func (l *Log) entry(index int) *Entry {
 func (l *Log) lastentry() *Entry {
 	return l.entry(l.lastindex())
 }
-
-func (l *Log) len() int {
-	return len(l.Logs)
-}
