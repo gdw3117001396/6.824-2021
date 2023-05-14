@@ -108,21 +108,21 @@ func (rf *Raft) readPersist(data []byte) {
 	}
 	r := bytes.NewBuffer(data)
 	d := labgob.NewDecoder(r)
-	var currentTerm, votedFor, lastIncludedIndex, lastIncludedTerm int
+	var currentTerm, votedFor, snapshotIndex, snapshotTerm int
 	var log Log
 	if d.Decode(&currentTerm) != nil ||
 		d.Decode(&votedFor) != nil ||
 		d.Decode(&log) != nil ||
-		d.Decode(&lastIncludedIndex) != nil ||
-		d.Decode(&lastIncludedTerm) != nil {
+		d.Decode(&snapshotIndex) != nil ||
+		d.Decode(&snapshotTerm) != nil {
 		DPrintf("readPersist erro")
 		os.Exit(1)
 	} else {
 		rf.currentTerm = currentTerm
 		rf.votedFor = votedFor
 		rf.log = log
-		rf.snapshotIndex = lastIncludedIndex
-		rf.snapshotTerm = lastIncludedTerm
+		rf.snapshotIndex = snapshotIndex
+		rf.snapshotTerm = snapshotTerm
 		DPrintf("%d 从 disk 恢复数据:currentTerm=%d,voteFor=%d,logs=%+v", rf.me, rf.currentTerm, rf.votedFor, rf.log)
 	}
 	rf.snapshot = rf.persister.ReadSnapshot()

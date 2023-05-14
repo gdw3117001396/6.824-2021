@@ -61,7 +61,8 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		reply.Success = false
 		reply.Conflict = true
 		xTerm := rf.log.entry(args.PrevLogIndex).Term
-		for xIndex := args.PrevLogIndex; xIndex > 0; xIndex-- {
+		// xIndex 在添加了快照之后就不能再是xIndex > 0而是xIndex > rf.log.start()
+		for xIndex := args.PrevLogIndex; xIndex > rf.log.start(); xIndex-- {
 			if rf.log.entry(xIndex-1).Term != xTerm {
 				reply.XIndex = xIndex
 				break
@@ -171,25 +172,37 @@ func (rf *Raft) processAppendReplyL(serverid int, args *AppendEntriesArgs, reply
 
 		if reply.XTerm == -1 {
 			rf.nextIndex[serverid] = reply.XLen
-			DPrintf("%d 在 term %d 拒绝了 %d 的日志传送，日志条目太少, nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
+			DPrintf("%d 在 term %d 拒绝了 %d 的日志传送，日志条目太少, nextIndex[%d]: %d .log start index : %d", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid], rf.log.start())
 		} else {
 			lastLogInXTermIndex := rf.findLastLogInTerm(reply.XTerm)
 			if lastLogInXTermIndex == -1 {
 				// Leader 中没有 XTerm，nextIndex = XIndex
 				rf.nextIndex[serverid] = reply.XIndex
-				DPrintf("%d 在 term %d 拒绝了 %d 的日志传送, 没有Xterm, nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
+				DPrintf("%d 在 term %d 拒绝了 %d 的日志传送, 没有Xterm, nextIndex[%d]: %d .log start index : %d", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid], rf.log.start())
 			} else {
 				// Leader 有 XTerm，nextIndex = leader's last entry for XTerm
 				rf.nextIndex[serverid] = lastLogInXTermIndex
-				DPrintf("%d 在 term %d 拒绝了 %d 的日志传送,有Xterm,nextIndex[%d]: %d .", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid])
+				DPrintf("%d 在 term %d 拒绝了 %d 的日志传送,有Xterm,nextIndex[%d]: %d .log start index : %d", serverid, rf.currentTerm, rf.me, serverid, rf.nextIndex[serverid], rf.log.start())
 			}
 		}
-		// 如果follower太落后了就要发送快照了
+		// 如果follower太落后了就要发送快照了，这里要是第一个日志index大于rf.nextIndex[serverid]，
+		//看了很久日志才发现，rf.nextIndex[serverid]和rf.log.start()会相等然后就一直不会发快照了，然后就failed to reach agreement
+		if rf.nextIndex[serverid] < rf.log.start()+1 {
+			args := &InstallSnapshotargs{
+				Term:              rf.currentTerm,
+				LeaderId:          rf.me,
+				LastIncludedIndex: rf.snapshotIndex,
+				LastIncludedTerm:  rf.snapshotTerm,
+				Data:              make([]byte, len(rf.snapshot)),
+			}
+			copy(args.Data, rf.snapshot)
+			go rf.sendSnapshot(serverid, args)
+		}
 	}
 	rf.leaderCommitL()
 }
 func (rf *Raft) findLastLogInTerm(x int) int {
-	for i := rf.log.lastindex(); i > 0; i-- {
+	for i := rf.log.lastindex(); i > rf.log.start(); i-- {
 		term := rf.log.entry(i).Term
 		if term == x {
 			return i
