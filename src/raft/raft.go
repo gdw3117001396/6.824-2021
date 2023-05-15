@@ -103,13 +103,6 @@ type Raft struct {
 	applyCond    *sync.Cond
 }
 
-/*
-type LogEntry struct {
-	Index   int         // 该记录在日志中的位置
-	Term    int         // 该记录首次被创建时的任期号
-	Command interface{} // 命令
-}*/
-
 // return currentTerm and whether this server
 // believes it is the leader.
 func (rf *Raft) GetState() (int, bool) {
