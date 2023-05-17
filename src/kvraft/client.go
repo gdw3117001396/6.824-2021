@@ -3,6 +3,7 @@ package kvraft
 import (
 	"crypto/rand"
 	"math/big"
+	"sync/atomic"
 	"time"
 
 	"6.824/labrpc"
@@ -11,9 +12,9 @@ import (
 type Clerk struct {
 	servers []*labrpc.ClientEnd
 	// You will have to modify this struct.
-	clientId  int64 // 客户端id
-	leaderId  int
-	commandId int64
+	leaderId    int
+	clientId    int64 // 客户端id
+	sequenceNum int64
 }
 
 func nrand() int64 {
@@ -28,7 +29,7 @@ func MakeClerk(servers []*labrpc.ClientEnd) *Clerk {
 	ck.servers = servers
 	// You'll have to add code here.
 	ck.clientId = nrand()
-	ck.commandId = 0
+	ck.sequenceNum = 0
 	ck.leaderId = 0
 	return ck
 }
@@ -49,16 +50,18 @@ func (ck *Clerk) Get(key string) string {
 
 	// You will have to modify this function.
 	args := GetArgs{
-		Key: key,
+		Key:         key,
+		ClientId:    ck.clientId,
+		SequenceNum: atomic.AddInt64(&ck.sequenceNum, 1),
 	}
 	for {
 		reply := GetReply{}
 		ok := ck.servers[ck.leaderId].Call("KVServer.Get", &args, &reply)
 		if ok && (reply.Err == OK || reply.Err == ErrNoKey) {
-			DPrintf("Client: %v 收到了成功的get回复", ck.clientId)
+			DPrintf("Client: %v 收到了成功的get回复 %v", ck.clientId, reply.Value)
 			return reply.Value
 		} else {
-			DPrintf("Client: %v 发送get超时或者kvServer[%d]不是leader", ck.clientId, ck.leaderId)
+			// DPrintf("Client: %v 发送get超时或者kvServer[%d]不是leader", ck.clientId, ck.leaderId)
 			ck.leaderId = (ck.leaderId + 1) % len(ck.servers)
 		}
 		// 稍等个一会再重试？
@@ -79,10 +82,13 @@ func (ck *Clerk) Get(key string) string {
 func (ck *Clerk) PutAppend(key string, value string, op string) {
 	// You will have to modify this function.
 	args := PutAppendArgs{
-		Key:   key,
-		Value: value,
-		Op:    op,
+		Key:         key,
+		Value:       value,
+		Op:          op,
+		ClientId:    ck.clientId,
+		SequenceNum: atomic.AddInt64(&ck.sequenceNum, 1),
 	}
+	// DPrintf("Clerk key %s, value %s", key, value)
 	for {
 		reply := PutAppendReply{}
 		ok := ck.servers[ck.leaderId].Call("KVServer.PutAppend", &args, &reply)
@@ -90,10 +96,10 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 			DPrintf("Client: %v 收到了成功的PutAppend回复", ck.clientId)
 			break
 		} else {
-			DPrintf("Client: %v 发送PutAppendt超时或者kvServer[ %d ]不是leader", ck.clientId, ck.leaderId)
+			// DPrintf("Client: %v 发送PutAppendt超时或者kvServer[ %d ]不是leader", ck.clientId, ck.leaderId)
 			ck.leaderId = (ck.leaderId + 1) % len(ck.servers)
 		}
-		// 稍等个一会再重试？
+		// 稍等个一会再重试
 		time.Sleep(10 * time.Millisecond)
 	}
 }

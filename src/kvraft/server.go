@@ -4,6 +4,7 @@ import (
 	"log"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"6.824/labgob"
 	"6.824/labrpc"
@@ -19,13 +20,17 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 	return
 }
 
+const excuteTimeOut = 500 * time.Millisecond
+
 type Op struct {
 	// Your definitions here.
 	// Field names must start with capital letters,
 	// otherwise RPC will break.
-	OpType string
-	Key    string
-	Value  string
+	OpType      string
+	Key         string
+	Value       string
+	ClientId    int64
+	SequenceNum int64
 }
 
 type KVServer struct {
@@ -37,9 +42,10 @@ type KVServer struct {
 
 	maxraftstate int // snapshot if log grows this big
 	// Your definitions here.
-	kvStore      map[string]string
-	indexChanMap map[int]chan CommandResponse
-	lastApplied  int
+	kvStore               map[string]string
+	indexChanMap          map[int]chan CommandResponse
+	clientLastSequenceNum map[int64]int64
+	lastApplied           int
 }
 
 type CommandResponse struct {
@@ -60,25 +66,42 @@ func (kv *KVServer) Get(args *GetArgs, reply *GetReply) {
 func (kv *KVServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
 	// Your code here.
 	cmd := Op{
-		OpType: args.Op,
-		Key:    args.Key,
-		Value:  args.Value,
+		OpType:      args.Op,
+		Key:         args.Key,
+		Value:       args.Value,
+		ClientId:    args.ClientId,
+		SequenceNum: args.SequenceNum,
 	}
 	reply.Err, _ = kv.CommandHandler(cmd)
 }
 
 func (kv *KVServer) CommandHandler(cmd Op) (Err, string) {
+	kv.mu.Lock()
+	if cmd.OpType != "Get" && kv.isduplicateSequenceNum(cmd.ClientId, cmd.SequenceNum) {
+		kv.mu.Unlock()
+		return OK, ""
+	}
+	kv.mu.Unlock()
+
 	index, _, isLeader := kv.rf.Start(cmd)
 	if !isLeader {
 		return ErrWrongLeader, ""
 	}
+
 	kv.mu.Lock()
 	ch := kv.getIndexChanL(index)
 	kv.mu.Unlock()
-	response := <-ch
+
 	// 每个session都删除即可
-	go kv.deleteIndexChan(index)
-	return response.Err, response.Value
+	defer kv.deleteIndexChan(index)
+	select {
+	case response := <-ch:
+		DPrintf("返回Err:%v, value%v", response.Err, response.Value)
+		return response.Err, response.Value
+	case <-time.After(excuteTimeOut):
+		// 超时就返回错误，重新发送
+		return ErrWrongLeader, ""
+	}
 }
 
 func (kv *KVServer) getIndexChanL(index int) chan CommandResponse {
@@ -90,8 +113,15 @@ func (kv *KVServer) getIndexChanL(index int) chan CommandResponse {
 
 func (kv *KVServer) deleteIndexChan(index int) {
 	kv.mu.Lock()
+	close(kv.indexChanMap[index])
 	delete(kv.indexChanMap, index)
 	kv.mu.Unlock()
+}
+
+// 命令是否重复
+func (kv *KVServer) isduplicateSequenceNum(clientId int64, sequenceNum int64) bool {
+	seqId, ok := kv.clientLastSequenceNum[clientId]
+	return ok && sequenceNum <= seqId
 }
 
 //
@@ -117,16 +147,23 @@ func (kv *KVServer) killed() bool {
 
 func (kv *KVServer) applier() {
 	for !kv.killed() {
-		for m := range kv.applyCh {
-			if m.CommandValid {
-				kv.mu.Lock()
-				op := m.Command.(Op)
-				if kv.lastApplied >= m.CommandIndex {
-					kv.mu.Unlock()
-					continue
-				}
-				kv.lastApplied = m.CommandIndex
-				response := CommandResponse{}
+		m := <-kv.applyCh
+		DPrintf("尝试提交信息message %v", m)
+		if m.CommandValid {
+			kv.mu.Lock()
+			if m.CommandIndex <= kv.lastApplied {
+				DPrintf("丢弃旧信息")
+				kv.mu.Unlock()
+				continue
+			}
+			kv.lastApplied = m.CommandIndex
+			op := m.Command.(Op)
+			response := CommandResponse{}
+			if op.OpType != "Get" && kv.isduplicateSequenceNum(op.ClientId, op.SequenceNum) {
+				DPrintf("不提交重复信息 %v 因为 client的 %v 最新的seqId 是 %v", m, op.ClientId, kv.clientLastSequenceNum[op.ClientId])
+				response.Err, response.Value = OK, ""
+			} else {
+				kv.clientLastSequenceNum[op.ClientId] = op.SequenceNum
 				switch op.OpType {
 				case "Get":
 					value, ok := kv.kvStore[op.Key]
@@ -135,25 +172,28 @@ func (kv *KVServer) applier() {
 					} else {
 						response.Err, response.Value = ErrNoKey, ""
 					}
+					// DPrintf("Server Get, key: %v, value: %v", op.Key, op.Value)
 				case "Put":
 					kv.kvStore[op.Key] = op.Value
 					response.Err, response.Value = OK, ""
+					// DPrintf("Server Put, key: %v, value: %v", op.Key, op.Value)
 				case "Append":
 					kv.kvStore[op.Key] += op.Value
 					response.Err, response.Value = OK, ""
+					// DPrintf("Server Append, key: %v, value: %v", op.Key, op.Value)
 				}
-
-				currentTerm, isLeader := kv.rf.GetState()
-				if isLeader {
-					DPrintf("发送消息回给客户端了 Command:%v Response:%v commitIndex:%v currentTerm: %v", op, response, m.CommandIndex, currentTerm)
-					ch := kv.getIndexChanL(m.CommandIndex)
-					kv.mu.Unlock()
-					ch <- response
-					kv.mu.Lock()
-				}
-				kv.mu.Unlock()
 			}
+			currentTerm, isLeader := kv.rf.GetState()
+			if isLeader && m.CommandTerm == currentTerm {
+				DPrintf("发送消息回给客户端了 Command:%v Response:%v commitIndex:%v currentTerm: %v", op, response, m.CommandIndex, currentTerm)
+				ch := kv.getIndexChanL(m.CommandIndex)
+				kv.mu.Unlock()
+				ch <- response
+				kv.mu.Lock()
+			}
+			kv.mu.Unlock()
 		}
+
 	}
 }
 
@@ -187,6 +227,7 @@ func StartKVServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persiste
 
 	kv.indexChanMap = make(map[int]chan CommandResponse)
 	kv.kvStore = make(map[string]string)
+	kv.clientLastSequenceNum = make(map[int64]int64)
 	kv.lastApplied = 0
 	// You may need initialization code here.
 	go kv.applier()
