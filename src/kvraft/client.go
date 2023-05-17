@@ -1,13 +1,19 @@
 package kvraft
 
-import "6.824/labrpc"
-import "crypto/rand"
-import "math/big"
+import (
+	"crypto/rand"
+	"math/big"
+	"time"
 
+	"6.824/labrpc"
+)
 
 type Clerk struct {
 	servers []*labrpc.ClientEnd
 	// You will have to modify this struct.
+	clientId  int64 // 客户端id
+	leaderId  int
+	commandId int64
 }
 
 func nrand() int64 {
@@ -21,6 +27,9 @@ func MakeClerk(servers []*labrpc.ClientEnd) *Clerk {
 	ck := new(Clerk)
 	ck.servers = servers
 	// You'll have to add code here.
+	ck.clientId = nrand()
+	ck.commandId = 0
+	ck.leaderId = 0
 	return ck
 }
 
@@ -39,7 +48,22 @@ func MakeClerk(servers []*labrpc.ClientEnd) *Clerk {
 func (ck *Clerk) Get(key string) string {
 
 	// You will have to modify this function.
-	return ""
+	args := GetArgs{
+		Key: key,
+	}
+	for {
+		reply := GetReply{}
+		ok := ck.servers[ck.leaderId].Call("KVServer.Get", &args, &reply)
+		if ok && (reply.Err == OK || reply.Err == ErrNoKey) {
+			DPrintf("Client: %v 收到了成功的get回复", ck.clientId)
+			return reply.Value
+		} else {
+			DPrintf("Client: %v 发送get超时或者kvServer[%d]不是leader", ck.clientId, ck.leaderId)
+			ck.leaderId = (ck.leaderId + 1) % len(ck.servers)
+		}
+		// 稍等个一会再重试？
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 //
@@ -54,6 +78,24 @@ func (ck *Clerk) Get(key string) string {
 //
 func (ck *Clerk) PutAppend(key string, value string, op string) {
 	// You will have to modify this function.
+	args := PutAppendArgs{
+		Key:   key,
+		Value: value,
+		Op:    op,
+	}
+	for {
+		reply := PutAppendReply{}
+		ok := ck.servers[ck.leaderId].Call("KVServer.PutAppend", &args, &reply)
+		if ok && reply.Err == OK {
+			DPrintf("Client: %v 收到了成功的PutAppend回复", ck.clientId)
+			break
+		} else {
+			DPrintf("Client: %v 发送PutAppendt超时或者kvServer[ %d ]不是leader", ck.clientId, ck.leaderId)
+			ck.leaderId = (ck.leaderId + 1) % len(ck.servers)
+		}
+		// 稍等个一会再重试？
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func (ck *Clerk) Put(key string, value string) {

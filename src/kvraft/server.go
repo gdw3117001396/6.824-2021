@@ -1,15 +1,16 @@
 package kvraft
 
 import (
-	"6.824/labgob"
-	"6.824/labrpc"
-	"6.824/raft"
 	"log"
 	"sync"
 	"sync/atomic"
+
+	"6.824/labgob"
+	"6.824/labrpc"
+	"6.824/raft"
 )
 
-const Debug = false
+const Debug = true
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug {
@@ -18,11 +19,13 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 	return
 }
 
-
 type Op struct {
 	// Your definitions here.
 	// Field names must start with capital letters,
 	// otherwise RPC will break.
+	OpType string
+	Key    string
+	Value  string
 }
 
 type KVServer struct {
@@ -33,17 +36,62 @@ type KVServer struct {
 	dead    int32 // set by Kill()
 
 	maxraftstate int // snapshot if log grows this big
-
 	// Your definitions here.
+	kvStore      map[string]string
+	indexChanMap map[int]chan CommandResponse
+	lastApplied  int
 }
 
+type CommandResponse struct {
+	Err   Err
+	Value string
+}
 
 func (kv *KVServer) Get(args *GetArgs, reply *GetReply) {
 	// Your code here.
+	cmd := Op{
+		OpType: "Get",
+		Key:    args.Key,
+		Value:  "",
+	}
+	reply.Err, reply.Value = kv.CommandHandler(cmd)
 }
 
 func (kv *KVServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
 	// Your code here.
+	cmd := Op{
+		OpType: args.Op,
+		Key:    args.Key,
+		Value:  args.Value,
+	}
+	reply.Err, _ = kv.CommandHandler(cmd)
+}
+
+func (kv *KVServer) CommandHandler(cmd Op) (Err, string) {
+	index, _, isLeader := kv.rf.Start(cmd)
+	if !isLeader {
+		return ErrWrongLeader, ""
+	}
+	kv.mu.Lock()
+	ch := kv.getIndexChanL(index)
+	kv.mu.Unlock()
+	response := <-ch
+	// 每个session都删除即可
+	go kv.deleteIndexChan(index)
+	return response.Err, response.Value
+}
+
+func (kv *KVServer) getIndexChanL(index int) chan CommandResponse {
+	if _, ok := kv.indexChanMap[index]; !ok {
+		kv.indexChanMap[index] = make(chan CommandResponse, 1)
+	}
+	return kv.indexChanMap[index]
+}
+
+func (kv *KVServer) deleteIndexChan(index int) {
+	kv.mu.Lock()
+	delete(kv.indexChanMap, index)
+	kv.mu.Unlock()
 }
 
 //
@@ -65,6 +113,48 @@ func (kv *KVServer) Kill() {
 func (kv *KVServer) killed() bool {
 	z := atomic.LoadInt32(&kv.dead)
 	return z == 1
+}
+
+func (kv *KVServer) applier() {
+	for !kv.killed() {
+		for m := range kv.applyCh {
+			if m.CommandValid {
+				kv.mu.Lock()
+				op := m.Command.(Op)
+				if kv.lastApplied >= m.CommandIndex {
+					kv.mu.Unlock()
+					continue
+				}
+				kv.lastApplied = m.CommandIndex
+				response := CommandResponse{}
+				switch op.OpType {
+				case "Get":
+					value, ok := kv.kvStore[op.Key]
+					if ok {
+						response.Err, response.Value = OK, value
+					} else {
+						response.Err, response.Value = ErrNoKey, ""
+					}
+				case "Put":
+					kv.kvStore[op.Key] = op.Value
+					response.Err, response.Value = OK, ""
+				case "Append":
+					kv.kvStore[op.Key] += op.Value
+					response.Err, response.Value = OK, ""
+				}
+
+				currentTerm, isLeader := kv.rf.GetState()
+				if isLeader {
+					DPrintf("发送消息回给客户端了 Command:%v Response:%v commitIndex:%v currentTerm: %v", op, response, m.CommandIndex, currentTerm)
+					ch := kv.getIndexChanL(m.CommandIndex)
+					kv.mu.Unlock()
+					ch <- response
+					kv.mu.Lock()
+				}
+				kv.mu.Unlock()
+			}
+		}
+	}
 }
 
 //
@@ -95,7 +185,10 @@ func StartKVServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persiste
 	kv.applyCh = make(chan raft.ApplyMsg)
 	kv.rf = raft.Make(servers, me, persister, kv.applyCh)
 
+	kv.indexChanMap = make(map[int]chan CommandResponse)
+	kv.kvStore = make(map[string]string)
+	kv.lastApplied = 0
 	// You may need initialization code here.
-
+	go kv.applier()
 	return kv
 }
