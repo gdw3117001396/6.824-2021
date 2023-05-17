@@ -13,6 +13,7 @@ type InstallSnapshotreplys struct {
 	Term int // 当前的任期，供Leader自我更新
 }
 
+// 主节点发送快照
 func (rf *Raft) sendSnapshot(serverId int, args *InstallSnapshotargs) {
 	reply := &InstallSnapshotreplys{}
 	ok := rf.sendInstallSnapshot(serverId, args, reply)
@@ -26,7 +27,7 @@ func (rf *Raft) sendSnapshot(serverId int, args *InstallSnapshotargs) {
 		if args.Term != rf.currentTerm {
 			return
 		}
-		rf.matchIndex[serverId] = args.LastIncludedIndex + 1
+		rf.nextIndex[serverId] = args.LastIncludedIndex + 1
 		rf.matchIndex[serverId] = args.LastIncludedIndex
 	}
 }
@@ -60,6 +61,7 @@ func (rf *Raft) CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int,
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	// Your code here (2D).
+	// 旧的日志不按照
 	if lastIncludedIndex <= rf.lastApplied || lastIncludedIndex <= rf.snapshotIndex {
 		return false
 	}
@@ -95,6 +97,7 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	// Your code here (2D).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
+	// 拒绝旧的快照安装请求
 	if index <= rf.snapshotIndex {
 		return
 	}
@@ -106,16 +109,4 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	rf.log.cutstart(index - rf.log.start())
 	rf.log = mkLog(rf.log.Logs, rf.log.start())
 	rf.persist()
-
-	// 主节点同步最新快照给从节点
-	/*if rf.state == Leader {
-		args := &InstallSnapshotargs{rf.currentTerm, rf.me, rf.snapshotIndex,
-			rf.snapshotTerm, make([]byte, len(rf.snapshot))}
-		copy(args.Data, rf.snapshot)
-		for i, _ := range rf.peers {
-			if i != rf.me {
-				go rf.sendSnapshot(i, args)
-			}
-		}
-	}*/
 }

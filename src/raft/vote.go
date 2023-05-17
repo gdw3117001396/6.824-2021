@@ -32,7 +32,7 @@ type RequestVoteReply struct {
 
 //
 // example RequestVote RPC handler.
-// 请求投票RPC
+// 其他节点处理投票请求
 func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	// Your code here (2A, 2B).
 	// 如果term < currentTerm,拒绝投票，否则如果rf.votedFor == null or candidateId同意
@@ -87,6 +87,7 @@ func (rf *Raft) electionL() {
 	}
 }
 
+// 候选节点发送投票请求
 func (rf *Raft) requestVote(serverId int, args *RequestVoteArgs, voteCount *int) {
 	replys := &RequestVoteReply{}
 	ok := rf.sendRequestVote(serverId, args, replys)
@@ -98,9 +99,9 @@ func (rf *Raft) requestVote(serverId int, args *RequestVoteArgs, voteCount *int)
 			rf.toFollowerL(replys.Term)
 			return
 		}
-		// double check，因为有可能发起新一轮选举了，才收到这个消息
-		// 是否还在同一个时期
-		if rf.state != Candidate || rf.currentTerm != args.Term {
+
+		// 指南上说，每次处理回复rpc的时候，一定要看是否还在同一个时期
+		if rf.currentTerm != args.Term {
 			return
 		}
 		if replys.VoteGranted {

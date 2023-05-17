@@ -92,7 +92,7 @@ type Raft struct {
 	snapshotIndex int    // 快照包含的最后一个entry的index
 	snapshotTerm  int    //  lastIncludedIndex对应的term
 
-	//
+	//相当于一个中间状态，用来apply给上层状态机的
 	waitingSnapshot []byte
 	waitingIndex    int
 	waitingTerm     int

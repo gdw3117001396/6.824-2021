@@ -105,10 +105,12 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	}
 }
 
+// 主节点给所有节点发送日志复制请求或heartBeat
 func (rf *Raft) sendAppendEntriesToAllPeerL(heartBeat bool) {
 	DPrintf("%d 在term %d 开始发送AppendEntries, nextIndex: %+v", rf.me, rf.currentTerm, rf.nextIndex)
 	for i := range rf.peers {
 		if i != rf.me {
+			// 如果是日志复制请求的情况下, 必须要有新日志复制，也就是rf.log.lastindex() >= rf.nextIndex[i]才发送rpc不然不要浪费rpc
 			if rf.log.lastindex() >= rf.nextIndex[i] || heartBeat {
 				rf.sendAppendEntriesToPeerL(i, heartBeat)
 			}
@@ -145,6 +147,8 @@ func (rf *Raft) sendAppendEntriesToPeerL(serverid int, heartBeat bool) {
 		}
 	}()
 }
+
+// 主节点处理日志请求回复
 func (rf *Raft) processAppendReplyL(serverid int, args *AppendEntriesArgs, reply *AppendEntriesReply) {
 	DPrintf("%d 在 term %d 收到 %d 的AppendEntries reply %+v", rf.me, rf.currentTerm, serverid, reply)
 	if reply.Term > rf.currentTerm {
@@ -165,7 +169,7 @@ func (rf *Raft) processAppendReplyL(serverid int, args *AppendEntriesArgs, reply
 		}
 		DPrintf("%d 在 term %d 更新了nextInde[%d]: %d , 更新了matchIndex[%d]: %d .", rf.me, rf.currentTerm, serverid, rf.nextIndex[serverid], serverid, rf.matchIndex[serverid])
 	} else {
-		// 收到了重复且过期的请求，无需处理。
+		// 相同term的请求有可能因超时发送多次,收到了重复且过期的请求，无需处理。
 		if args.PrevLogIndex+1 != rf.nextIndex[serverid] && args.PrevLogIndex != rf.log.start() {
 			return
 		}
@@ -201,6 +205,8 @@ func (rf *Raft) processAppendReplyL(serverid int, args *AppendEntriesArgs, reply
 	}
 	rf.leaderCommitL()
 }
+
+// 找到log最后一个XTerm的index
 func (rf *Raft) findLastLogInTerm(x int) int {
 	for i := rf.log.lastindex(); i > rf.log.start(); i-- {
 		term := rf.log.entry(i).Term
@@ -219,6 +225,7 @@ func (rf *Raft) leaderCommitL() {
 		return
 	}
 	start := rf.commitIndex + 1
+	// 安装快照后，有可能存在这种情况
 	if start < rf.log.start() {
 		start = rf.log.start() + 1
 	}
