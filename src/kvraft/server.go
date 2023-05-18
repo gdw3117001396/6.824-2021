@@ -1,6 +1,7 @@
 package kvraft
 
 import (
+	"bytes"
 	"log"
 	"sync"
 	"sync/atomic"
@@ -11,7 +12,7 @@ import (
 	"6.824/raft"
 )
 
-const Debug = true
+const Debug = false
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug {
@@ -41,6 +42,7 @@ type KVServer struct {
 	dead    int32 // set by Kill()
 
 	maxraftstate int // snapshot if log grows this big
+	persister    *raft.Persister
 	// Your definitions here.
 	kvStore               map[string]string
 	indexChanMap          map[int]chan CommandResponse
@@ -148,8 +150,17 @@ func (kv *KVServer) killed() bool {
 func (kv *KVServer) applier() {
 	for !kv.killed() {
 		m := <-kv.applyCh
-		DPrintf("尝试提交信息message %v", m)
-		if m.CommandValid {
+		// DPrintf("尝试提交信息message %v", m)
+		if m.SnapshotValid {
+			kv.mu.Lock()
+			// 这里参数不要传成Command的了，有点尴尬找了很久的错误才发现这个问题
+			if kv.rf.CondInstallSnapshot(m.SnapshotTerm, m.SnapshotIndex, m.Snapshot) {
+				DPrintf("kvserver %d 安装了从raft服务传来的快照", kv.me)
+				kv.InstallSnapshotL(m.Snapshot)
+				kv.lastApplied = m.CommandIndex
+			}
+			kv.mu.Unlock()
+		} else if m.CommandValid {
 			kv.mu.Lock()
 			if m.CommandIndex <= kv.lastApplied {
 				DPrintf("丢弃旧信息")
@@ -191,9 +202,45 @@ func (kv *KVServer) applier() {
 				ch <- response
 				kv.mu.Lock()
 			}
+			if kv.maxraftstate != -1 && kv.persister.RaftStateSize() > kv.maxraftstate {
+				DPrintf("kv server %d 主动安装了快照", kv.me)
+				kv.SnapShotL(kv.lastApplied)
+			}
 			kv.mu.Unlock()
 		}
 
+	}
+}
+
+// 主动安装快照，调用raft 的Snapshot来安装快照
+func (kv *KVServer) SnapShotL(index int) {
+	w := new(bytes.Buffer)
+	e := labgob.NewEncoder(w)
+	e.Encode(kv.kvStore)
+	e.Encode(kv.clientLastSequenceNum)
+	e.Encode(kv.lastApplied)
+	data := w.Bytes()
+	kv.rf.Snapshot(index, data)
+}
+
+func (kv *KVServer) InstallSnapshotL(data []byte) {
+	if data == nil || len(data) < 1 { // bootstrap without any state?
+		return
+	}
+	r := bytes.NewBuffer(data)
+	d := labgob.NewDecoder(r)
+	var kvStore map[string]string
+	var clientLastSequenceNum map[int64]int64
+	var lastApplied int
+	if d.Decode(&kvStore) != nil ||
+		d.Decode(&clientLastSequenceNum) != nil ||
+		d.Decode(&lastApplied) != nil {
+		DPrintf("安装快照失败")
+		// os.Exit(1)
+	} else {
+		kv.kvStore = kvStore
+		kv.clientLastSequenceNum = clientLastSequenceNum
+		kv.lastApplied = lastApplied
 	}
 }
 
@@ -219,7 +266,7 @@ func StartKVServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persiste
 	kv := new(KVServer)
 	kv.me = me
 	kv.maxraftstate = maxraftstate
-
+	kv.persister = persister
 	// You may need initialization code here.
 
 	kv.applyCh = make(chan raft.ApplyMsg)
@@ -229,6 +276,7 @@ func StartKVServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persiste
 	kv.kvStore = make(map[string]string)
 	kv.clientLastSequenceNum = make(map[int64]int64)
 	kv.lastApplied = 0
+	kv.InstallSnapshotL(persister.ReadSnapshot())
 	// You may need initialization code here.
 	go kv.applier()
 	return kv
