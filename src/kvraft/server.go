@@ -89,7 +89,7 @@ func (kv *KVServer) CommandHandler(cmd Op) (Err, string) {
 	if !isLeader {
 		return ErrWrongLeader, ""
 	}
-
+	// DPrintf("kvserver %d 写入了命令", kv.me)
 	kv.mu.Lock()
 	ch := kv.getIndexChanL(index)
 	kv.mu.Unlock()
@@ -152,14 +152,14 @@ func (kv *KVServer) applier() {
 		m := <-kv.applyCh
 		// DPrintf("尝试提交信息message %v", m)
 		if m.SnapshotValid {
-			kv.mu.Lock()
 			// 这里参数不要传成Command的了，有点尴尬找了很久的错误才发现这个问题
 			if kv.rf.CondInstallSnapshot(m.SnapshotTerm, m.SnapshotIndex, m.Snapshot) {
+				kv.mu.Lock()
 				DPrintf("kvserver %d 安装了从raft服务传来的快照", kv.me)
 				kv.InstallSnapshotL(m.Snapshot)
 				kv.lastApplied = m.CommandIndex
+				kv.mu.Unlock()
 			}
-			kv.mu.Unlock()
 		} else if m.CommandValid {
 			kv.mu.Lock()
 			if m.CommandIndex <= kv.lastApplied {

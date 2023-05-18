@@ -86,7 +86,7 @@ func (ps *Persister) SnapshotSize() int {
 // where it can later be retrieved after a crash and restart.
 // see paper's Figure 2 for a description of what should be persistent.
 //
-func (rf *Raft) persist() {
+func (rf *Raft) persist(needSaveSnapshot bool) {
 	// Your code here (2C).
 	w := new(bytes.Buffer)
 	e := labgob.NewEncoder(w)
@@ -96,7 +96,11 @@ func (rf *Raft) persist() {
 	e.Encode(rf.snapshotIndex)
 	e.Encode(rf.snapshotTerm)
 	data := w.Bytes()
-	rf.persister.SaveStateAndSnapshot(data, rf.snapshot)
+	if needSaveSnapshot {
+		rf.persister.SaveStateAndSnapshot(data, rf.snapshot)
+	} else {
+		rf.persister.SaveRaftState(data)
+	}
 }
 
 //

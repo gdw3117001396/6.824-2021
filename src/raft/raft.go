@@ -185,7 +185,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	index := rf.log.lastindex() + 1
 	term := rf.currentTerm
 	rf.log.append(Entry{Term: term, Command: command})
-	rf.persist()
+	rf.persist(false)
 	DPrintf("%d 在 term %d 写入了日志, LogIndex : %d , LogTerm : %d, Command: %v", rf.me, rf.currentTerm, index, term, command)
 	rf.sendAppendEntriesToAllPeerL(false)
 	return index, term, true
@@ -217,7 +217,7 @@ func (rf *Raft) toFollowerL(term int) {
 	rf.state = Follower
 	rf.currentTerm = term
 	rf.votedFor = -1
-	rf.persist()
+	rf.persist(false)
 	DPrintf("%d 在term %d 变成了Follower", rf.me, rf.currentTerm)
 }
 
@@ -226,7 +226,7 @@ func (rf *Raft) toCandidateL() {
 	rf.currentTerm++
 	rf.votedFor = rf.me
 	rf.state = Candidate
-	rf.persist()
+	rf.persist(false)
 	DPrintf("%d 在term %d 变成了Candidate并发起选举", rf.me, rf.currentTerm)
 }
 

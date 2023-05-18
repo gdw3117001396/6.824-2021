@@ -96,7 +96,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		}
 	}
 	if needPersist {
-		rf.persist()
+		rf.persist(false)
 	}
 
 	if args.LeaderCommit > rf.commitIndex {

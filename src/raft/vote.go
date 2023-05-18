@@ -62,7 +62,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		reply.VoteGranted = true
 		rf.votedFor = args.CandidateId
 		// 给其它节点投票了才要重置超时时间，没投票不能重置超时时间
-		rf.persist()
+		rf.persist(false)
 		rf.resetElectionTimeL()
 	}
 }

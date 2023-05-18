@@ -79,7 +79,7 @@ func (rf *Raft) CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int,
 	rf.snapshotIndex = lastIncludedIndex
 	rf.snapshotTerm = lastIncludedTerm
 	rf.snapshot = snapshot
-	rf.persist()
+	rf.persist(true)
 	rf.lastApplied = lastIncludedIndex
 	if lastIncludedIndex > rf.commitIndex {
 		rf.commitIndex = lastIncludedIndex
@@ -108,5 +108,5 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	// 清空过期日志
 	rf.log.cutstart(index - rf.log.start())
 	rf.log = mkLog(rf.log.Logs, rf.log.start())
-	rf.persist()
+	rf.persist(true)
 }
