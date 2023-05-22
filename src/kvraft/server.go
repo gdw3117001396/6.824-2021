@@ -58,9 +58,11 @@ type CommandResponse struct {
 func (kv *KVServer) Get(args *GetArgs, reply *GetReply) {
 	// Your code here.
 	cmd := Op{
-		OpType: "Get",
-		Key:    args.Key,
-		Value:  "",
+		OpType:      "Get",
+		Key:         args.Key,
+		Value:       "",
+		ClientId:    args.ClientId,
+		SequenceNum: args.SequenceNum,
 	}
 	reply.Err, reply.Value = kv.CommandHandler(cmd)
 }
