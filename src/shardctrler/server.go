@@ -220,16 +220,16 @@ func (sc *ShardCtrler) updateConfigL(op Op) Config {
 	opType := op.Optype
 	switch opType {
 	case OpJoin:
-		DPrintf("ServerNum: %d, opType: %s, op.Servers: %v", sc.me, opType, op.Servers)
+		DPrintf("Server: %d, opType: %s, op.Servers: %v", sc.me, opType, op.Servers)
 		sc.opJoinL(&nextCfg, op.Servers)
 	case OpLeave:
-		DPrintf("ServerNum: %d, opType: %s, op.GIDS: %v", sc.me, opType, op.GIDs)
+		DPrintf("Server: %d, opType: %s, op.GIDS: %v", sc.me, opType, op.GIDs)
 		sc.opLeaveL(&nextCfg, op.GIDs)
 	case OpMove:
-		DPrintf("ServerNum: %d, opType: %s, op.Shard: %v, op.GID: %v", sc.me, opType, op.Shard, op.GID)
+		DPrintf("Server: %d, opType: %s, op.Shard: %v, op.GID: %v", sc.me, opType, op.Shard, op.GID)
 		sc.opMoveL(&nextCfg, op.Shard, op.GID)
 	}
-	DPrintf("更新了分片控制器: %v: Op: %v nextCfg: %v lastCfg:%v", sc.me, opType, nextCfg, sc.configs[len(sc.configs)-1])
+	DPrintf("server %d 更新了分片控制器: Op: %v nextCfg: %v lastCfg:%v", sc.me, opType, nextCfg, sc.configs[len(sc.configs)-1])
 	sc.configs = append(sc.configs, nextCfg)
 	return nextCfg
 }
@@ -260,8 +260,8 @@ func (sc *ShardCtrler) opMoveL(config *Config, shard int, GID int) {
 }
 
 func (sc *ShardCtrler) balanceL(config *Config) {
-	bufferShards := []int{}       // 有哪些分片Shard分配不均匀的，放入buffer等待分配
-	gidBuckets := map[int][]int{} // 统计目前每个gid集群服务哪些Shard
+	bufferShards := []int{}       // 有哪些分片Shard分配不均匀的，放入buffer等待分配(shard[])
+	gidBuckets := map[int][]int{} // 统计目前每个gid集群服务哪些Shard(gid->shard[])
 	newServerNum := len(config.Groups)
 	avgNum := NShards / newServerNum
 	for gid := range config.Groups {
@@ -281,8 +281,9 @@ func (sc *ShardCtrler) balanceL(config *Config) {
 			}
 		}
 	}
+
 	// 排序，保证每个raft节点都是相同的顺序更改配置
-	var keys []int
+	var keys []int // gid[]
 	for k, _ := range gidBuckets {
 		keys = append(keys, k)
 	}
@@ -306,9 +307,9 @@ func (sc *ShardCtrler) balanceL(config *Config) {
 	for i := bufferShardsIndex; i < len(bufferShards); i++ {
 		// buffer还有剩余分片，并且该分片原gid不在新配置汇总，则分给其他新gid
 		if _, ok := config.Groups[config.Shards[bufferShards[i]]]; !ok {
-			config.Shards[bufferShards[i]] = index
+			config.Shards[bufferShards[i]] = keys[index]
 			index++
-			DPrintf("buffer还有剩余的分片,分给了%v, 总共有 %d groups", keys[index], len(gidBuckets))
+			DPrintf("server %d buffer还有剩余的分片,把分片 %v 分给了%v, 总共有 %d groups", sc.me, bufferShards[i], config.Shards[bufferShards[i]], len(gidBuckets))
 		}
 	}
 }
