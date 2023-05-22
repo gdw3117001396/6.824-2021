@@ -218,13 +218,15 @@ func (sc *ShardCtrler) applier() {
 func (sc *ShardCtrler) updateConfigL(op Op) Config {
 	nextCfg := sc.getConfigL()
 	opType := op.Optype
-	DPrintf("ServerNum: %d, opType: %s", sc.me, opType)
 	switch opType {
 	case OpJoin:
+		DPrintf("ServerNum: %d, opType: %s, op.Servers: %v", sc.me, opType, op.Servers)
 		sc.opJoinL(&nextCfg, op.Servers)
 	case OpLeave:
+		DPrintf("ServerNum: %d, opType: %s, op.GIDS: %v", sc.me, opType, op.GIDs)
 		sc.opLeaveL(&nextCfg, op.GIDs)
 	case OpMove:
+		DPrintf("ServerNum: %d, opType: %s, op.Shard: %v, op.GID: %v", sc.me, opType, op.Shard, op.GID)
 		sc.opMoveL(&nextCfg, op.Shard, op.GID)
 	}
 	DPrintf("更新了分片控制器: %v: Op: %v nextCfg: %v lastCfg:%v", sc.me, opType, nextCfg, sc.configs[len(sc.configs)-1])
