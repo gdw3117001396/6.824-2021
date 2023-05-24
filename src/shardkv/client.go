@@ -8,11 +8,15 @@ package shardkv
 // talks to the group that holds the key's shard.
 //
 
-import "6.824/labrpc"
-import "crypto/rand"
-import "math/big"
-import "6.824/shardctrler"
-import "time"
+import (
+	"crypto/rand"
+	"math/big"
+	"sync/atomic"
+	"time"
+
+	"6.824/labrpc"
+	"6.824/shardctrler"
+)
 
 //
 // which shard is a key in?
@@ -40,6 +44,8 @@ type Clerk struct {
 	config   shardctrler.Config
 	make_end func(string) *labrpc.ClientEnd
 	// You will have to modify this struct.
+	clientId    int64
+	sequenceNum int64
 }
 
 //
@@ -56,6 +62,9 @@ func MakeClerk(ctrlers []*labrpc.ClientEnd, make_end func(string) *labrpc.Client
 	ck.sm = shardctrler.MakeClerk(ctrlers)
 	ck.make_end = make_end
 	// You'll have to add code here.
+	ck.config = ck.sm.Query(-1)
+	ck.clientId = nrand()
+	ck.sequenceNum = 0
 	return ck
 }
 
@@ -68,7 +77,8 @@ func MakeClerk(ctrlers []*labrpc.ClientEnd, make_end func(string) *labrpc.Client
 func (ck *Clerk) Get(key string) string {
 	args := GetArgs{}
 	args.Key = key
-
+	args.ClientId = ck.clientId
+	args.SequenceNum = atomic.AddInt64(&ck.sequenceNum, 1)
 	for {
 		shard := key2shard(key)
 		gid := ck.config.Shards[shard]
@@ -104,8 +114,8 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 	args.Key = key
 	args.Value = value
 	args.Op = op
-
-
+	args.ClientId = ck.clientId
+	args.SequenceNum = atomic.AddInt64(&ck.sequenceNum, 1)
 	for {
 		shard := key2shard(key)
 		gid := ck.config.Shards[shard]
