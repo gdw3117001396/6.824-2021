@@ -44,8 +44,8 @@ type Clerk struct {
 	config   shardctrler.Config
 	make_end func(string) *labrpc.ClientEnd
 	// You will have to modify this struct.
-	clientId    int64
-	sequenceNum int64
+	clientId  int64
+	commandId int64
 }
 
 //
@@ -64,7 +64,7 @@ func MakeClerk(ctrlers []*labrpc.ClientEnd, make_end func(string) *labrpc.Client
 	// You'll have to add code here.
 	ck.config = ck.sm.Query(-1)
 	ck.clientId = nrand()
-	ck.sequenceNum = 0
+	ck.commandId = 0
 	return ck
 }
 
@@ -78,7 +78,7 @@ func (ck *Clerk) Get(key string) string {
 	args := GetArgs{}
 	args.Key = key
 	args.ClientId = ck.clientId
-	args.SequenceNum = atomic.AddInt64(&ck.sequenceNum, 1)
+	args.CommandId = atomic.AddInt64(&ck.commandId, 1)
 	for {
 		shard := key2shard(key)
 		gid := ck.config.Shards[shard]
@@ -101,8 +101,6 @@ func (ck *Clerk) Get(key string) string {
 		// ask controler for the latest configuration.
 		ck.config = ck.sm.Query(-1)
 	}
-
-	return ""
 }
 
 //
@@ -115,7 +113,7 @@ func (ck *Clerk) PutAppend(key string, value string, op string) {
 	args.Value = value
 	args.Op = op
 	args.ClientId = ck.clientId
-	args.SequenceNum = atomic.AddInt64(&ck.sequenceNum, 1)
+	args.CommandId = atomic.AddInt64(&ck.commandId, 1)
 	for {
 		shard := key2shard(key)
 		gid := ck.config.Shards[shard]

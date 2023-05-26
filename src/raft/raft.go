@@ -287,6 +287,13 @@ func (rf *Raft) applier() {
 	}
 }
 
+// Lab4活锁检测，检测是否有当前当前term的日志
+func (rf *Raft) HasLogInCurrentTerm() bool {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	return rf.log.lastentry().Term == rf.currentTerm
+}
+
 //
 // the service or tester wants to create a Raft server. the ports
 // of all the Raft servers (including this one) are in peers[]. this
